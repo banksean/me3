@@ -1,0 +1,359 @@
+
+%-------------------------
+% Based on https://github.com/arasgungore/arasgungore-CV/tree/main
+% Resume in Latex
+% Author : Aras Gungore
+% License : MIT
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+%\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{hyphenat}
+\usepackage{fontawesome}
+\input{glyphtounicode}
+\usepackage[colorlinks = true,
+            linkcolor = blue,
+            urlcolor  = blue,
+            citecolor = blue,
+            anchorcolor = blue]{hyperref}
+
+%---------- FONT OPTIONS ----------
+% sans-serif
+% \usepackage[sfdefault]{FiraSans}
+% \usepackage[sfdefault]{roboto}
+% \usepackage[sfdefault]{noto-sans}
+% \usepackage[default]{sourcesanspro}
+
+% serif
+% \usepackage{CormorantGaramond}
+% \usepackage{charter}
+
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+% Ensure that generate pdf is machine readable/ATS parsable
+\pdfgentounicode=1
+
+%-------------------------
+% Custom commands
+
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+
+\newcommand{\resumeSubSubheading}[2]{
+    \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+
+\newcommand{\resumeEducationHeading}[6]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+      \textit{\small#5} & \textit{\small #6} \\
+    \end{tabular*}\vspace{-5pt}
+}
+
+
+\newcommand{\resumeProjectHeading}[2]{
+    \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+
+\newcommand{\resumeOrganizationHeading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & \textit{\small #2} \\
+      \textit{\small#3}
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+
+%---------- HEADING ----------
+
+\begin{center}
+    \textbf{\Huge \scshape Sean McCullough} \\ \vspace{3pt}
+    \small
+    \faMobile \hspace{.5pt} \href{tel:15126997221}{+1 512 699 7221}
+    $|$
+    \faAt \hspace{.5pt} \href{mailto:banksean@gmail.com}{banksean@gmail.com}
+    $|$
+    \faLinkedinSquare \hspace{.5pt} \href{https://www.linkedin.com/in/seanmccullough/}{LinkedIn}
+    $|$
+    \faGithub \hspace{.5pt} \href{https://github.com/banksean}{GitHub}
+    $|$
+    \faMapMarker \hspace{.5pt} \href{https://maps.app.goo.gl/qZ2iPhKzdnsEXERw8}{San Francisco, California, USA}
+\end{center}
+
+%---------- TL;DR ----------------
+
+\section{Summary}
+\vspace{2pt}
+\resumeSubHeadingListStart
+  \small{\item{
+      \textbf{Senior Software Engineer}{ with decades of experience in startups as well as a large publicly-traded company seeks:} \\ \vspace{3pt}
+      \textbf{}{- A high-impact individual contributor role in a fast-moving startup, or a highly-autonomous team at a larger company} \\ \vspace{3pt}
+      \textbf{}{- Opportunities to lead technical decisions and offer guidance and mentorship in areas where I have experience } \\ \vspace{3pt}
+      \textbf{}{- Opportunities to learn new technical skills or apply my existing skills to new problem spaces } \\ \vspace{3pt}
+  }}
+\resumeSubHeadingListEnd
+
+
+%----------- SKILLS -----------
+
+\section{Skills}
+  \vspace{2pt}
+  \resumeSubHeadingListStart
+    \small{\item{
+        
+        \textbf{Languages:}{ Go, JavaScript, TypeScript, Python, Java, Protocol Buffers, SQL, HTML, CSS } \\ \vspace{3pt}
+        
+        \textbf{Technologies:}{ gRPC, JSON/REST, Git, Bazel, Web Components, GCP, BigQuery, Docker, Kubernetes, CoLab/Jupyter Notebooks, CockroachDB, Spanner, MySQL, TensorFlow } \\ \vspace{3pt}
+
+        \textbf{Interests:}{ Web App Frontends, Web App Backends, Logging Instrumentation and Analysis, Distributed Tracing, ML Training Data Pipelines, ML Model Inference Serving, Data Analysis and Visualization, Experiment Design, Performance Benchmarking and Analysis, CI/CD Automation } \\ \vspace{3pt}
+
+    }}
+  \resumeSubHeadingListEnd
+
+
+
+%----------- EXPERIENCE -----------
+
+\section{Roles at Google, 2007 \textbf{--} Present}
+  \vspace{3pt}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {Chrome Browser Engineering Productivity}{San Francisco, California, United States}
+      {Senior Software Engineer}{March 2020 \textbf{--} Present, Full-time}
+        \resumeItemListStart
+            \resumeItem{Designed and led the development of CABE (\href{https://github.com/google/skia-buildbot/tree/main/cabe}{public mirror of repo}), a new system for analyzing performance benchmark data collected from Chrome's CI/CD system.}
+            \resumeItem{Filtering out anomalies that fail to reproduce under controlled conditions has reduced the false positive rate for performance regression alerts by over 50\%}
+            \resumeItem{Worked with a statistician to specify how to port a critical R statistical package to native Go, to reduce the number of external dependencies and improve reliability and maintainability of the service.}
+            \resumeItem{Controlled A/B experiment design, statistical hypothesis testing, system design, backend services, Go, Python, R, gRPC, protobuf, k8s, GKE, GCP, Envoy Proxy}
+            \resumeItem{Also made substantial contributions to the Skia.org performance dashboard (frontend and backend) to prepare for a migration from Chrome's legacy performance dashboard (Go, TypeScript, Web Components, lit-html, CockroachDB).}
+        \resumeItemListEnd
+
+    \resumeSubheading
+      {Google.org, AI Impact Challenge}{San Francisco, California, United States}
+      {Fellow, Senior Software Engineer}{Dec 2019 \textbf{--} March 2020, Full-time}
+        \resumeItemListStart
+            \resumeItem{Designed and led development of AI applications to improve student outcomes for Tech-Ed nonprofit and Google.org AI Impact Challenge winner, \href{https://talkingpts.org/blog/googlepressrelease/1/}{TalkingPoints.org}.}
+            \resumeItem{Created a training data pipeline: automated extraction from MongoDB, transformation into labelable message transcripts stored in GCS/BigQuery, human-labeling process to create training data.}
+            \resumeItem{Used Google Cloud AutoML Text API to create a classifier for user segments}
+            \resumeItem{Instrumented client and server code for online experiments using Google Analytics and FireStore A/B Testing to optimize ranking for in-app feature promotions}
+            \resumeItem{Training data pipelines, ML model training/inference, web app frontend, web app backend, logging instrumentation, Heroku, Node.js, MongoDB, GCP, BigQuery, AutoML, Firebase, Google Analytics}
+        \resumeItemListEnd
+
+    \resumeSubheading
+      {Chrome Browser Operations}{San Francisco, California, United States}
+      {Senior Software Engineer}{Dec 2014 \textbf{--} Dec 2019, Full-time}
+      \resumeItemListStart
+          \resumeItem{Core team member for launching bugs.chromium.org (spam filter, rate limiting, online schema change support, many user-visible features): AppEngine, Python, MySQL, HTML, CSS, JavaScript}
+          \resumeItem{Tech Lead/Manager for Chrome Operations Frontends team (unified UI library, best practices for dependency management and CI/CD): Web Components, JavaScript, HTML, CSS, NPM, Lerna, WebPack, Karma, Mocha, Chai }
+          \resumeItem{Developed automated functional regression analysis tools for Chrome's CI/CD system: Python, Go, BigQuery, AppEngine, Web Components, JavaScript, HTML, CSS}
+      \resumeItemListEnd
+
+    \resumeSubheading
+    {Social Analytics (Internal metrics for Google Plus)}{Mountain View, California, United States}
+    {Software Engineer}{2010 \textbf{--} 2014, Full-time}
+        \resumeItemListStart
+            \resumeItem{Visual Element logging for web frontends: added declarative logging support to Soy HTML templates, including static checks for allowed event types and document structure constraints. 
+            Wrote client-side "VELogger" library to manage browser event handler lifecycles based on those declarations and also batch and transmit logged events to a centralized log storage service. 
+            To aid feature developers with logging instrumentation I also wrote a Chrome extension that highlighted logged elements, events and metadata along with constraint violations (Java, JS, Protobuf, Soy Templates, Closure Compiler, Wiz framework, Chrome Extensions)}
+            \resumeItem{Experiment Metrics Dashboard: Built a UI server (Java/JS/HTML5, Closure Compiler) to render confidence intervals and search metrics by experiment metadata, 
+            as well as parts of the map/reduce pipeline that generated the underlying Dremel tables from user session logs (Sawzall, Go, Map/Reduce, protobuf)}
+            \resumeItem{User Metrics: Wrote batch jobs to generate aggregate metrics and dimension Dremel tables from user session logs, including multi-day active user retention (Sawzall, Go, Map/Reduce, protobuf) }
+            \resumeItem{User Sessions: Wrote an interactive dashboard UI for debugging user session event logs (Go, Java, Python, JavaScript, Closure Compiler, HTML5, CSS, Protocol Buffers)}
+            \resumeItem{Various ad-hoc data visualization projects for internal clients, built using D3.js }
+        \resumeItemListEnd
+  
+    \resumeSubheading
+    {Blogger/BlogSpot}{Mountain View, California, United States}
+    {Software Engineer}{2007 \textbf{--} 2010, Full-time}
+        \resumeItemListStart
+          \resumeItem{Helped launch a new version of Blogger's template editor, including retrofits for CSS features that were not supported in older browsers}
+          \resumeItem{Implemented Blogger's OpenID Relying Party support to allow users with any OpenID provider to comment on Blogger blogs}
+          \resumeItem{"Subscribe" sidebar widget for RSS reader links, "Followers" sidebar widget for Blogger's FriendConnect integration}
+          \resumeItem{Java, BigTable, Protocol Buffers, OpenID, FriendConnect, RSS, GWT, HTML5, CSS, JavaScript, Closure Compiler}
+        \resumeItemListEnd
+    
+  \resumeSubHeadingListEnd
+
+\section{Roles prior to Google, 1997 \textbf{--} 2007}
+  \vspace{3pt}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {LargeSmall Systems (OneSpot)}{Austin, Texas, United States}
+      {Senior Technologist}{January 2007 \textbf{--} August 2007 Full-time}
+        \resumeItemListStart
+            \resumeItem{White-label blog aggregation service for arbitrary subjects, custom-branded presentation.}
+            \resumeItem{Ruby on Rails, PostgreSQL, Apache, Mongrel, Linux (CentOS), rake, capistrano, backgrounDRb, script.aculo.us, prototype, cross-browser CSS.}
+        \resumeItemListEnd
+
+    \resumeSubheading
+      {Pluck, Inc (Demand Media)}{Austin, Texas, United States}
+      {Senior Developer}{2005 \textbf{--} 2007, Full-time}
+        \resumeItemListStart
+            \resumeItem{Designed and developed major parts of SiteLife Reactions and InSite Blogging platforms.}
+            \resumeItem{Multiple client installations including statesmanblogs.com and austin360blogs.com, rmblogs.thestreet.com, Better Homes and Gardens, USA Today.}
+            \resumeItem{Atom API, REST, RSS, C\#, ASP.NET, Secure HTTP, SQL Server, Nhibernate, Nunit, Nant, XML, XSL, DB4O, XSLT, Spring.Net, IIS 6.0, MonoRail, NVelocity, Scriptaculous, Prototype, TinyMCE, CSS and DOM scripting.}
+        \resumeItemListEnd
+
+    \resumeSubheading
+      {Traq Wireless}{Austin, Texas, United States}
+      {Senior Developer}{2004 \textbf{--} 2005, Full-time}
+      \resumeItemListStart
+          \resumeItem{Java/J2EE, JSP, Servlets, iBATIS SQL Maps, Tomcat, JBoss, Oracle 9i/10g, PL/SQL, XML, XSLT, Jakarta Struts, Jakarta Velocity, Fuego Enterprise Workflow Engine, DHTML, JavaScript}
+      \resumeItemListEnd
+
+    \resumeSubheading
+    {Open Storm Software}{Austin, Texas, United States}
+    {Independent Consultant}{2003 \textbf{--} 2004, Full-time}
+        \resumeItemListStart
+            \resumeItem{Business Process Execution Language (BPEL) 1.1, C\#, Windows Forms .NET, Web Services, Schematron, XML Schema, ASP .NET}
+        \resumeItemListEnd
+  
+    \resumeSubheading
+    {AVLabs Development}{Austin, Texas, United States}
+    {Software Engineer}{2000 \textbf{--} 2002, Full-time}
+        \resumeItemListStart
+          \resumeItem{AVLabs Development was an in-house consultancy for AVLabs, a technology incubator and seed-stage venture capital firm associated with Austin Ventures.}
+          \resumeItem{I helped reduce implementation risk for portfolio companies by providing technology expertise in prototype and product development during early stages of company and product evolution.}
+        \resumeItemListEnd
+  
+    \resumeSubheading
+    {WebTaggers, Inc}{Austin, Texas, United States}
+    {Founder, Chief Technology Officer}{1998 \textbf{--} 2000, Full-time}
+        \resumeItemListStart
+          \resumeItem{Established and maintained the technological vision for the company}
+          \resumeItem{Co-wrote the business plan and pitched the idea to investors, raising \$1M seed funding from Austin Ventures and AVLabs}
+          \resumeItem{Licensed core technology to NetPerceptions, of Minneapolis, Minnesota}
+          \resumeItem{Nominated for 2000 Ernst and Young Entrepreneur of the Year, Emerging Growth category}
+          \resumeItem{Granted 6 US patents}
+          \resumeItem{Assisted the transfer of IP to Vignette Corporation, as part winding the company down in 2000 after failing to raise a second round of funding}
+        \resumeItemListEnd
+    
+    \resumeSubheading
+    {Activerse, Inc (Active Paper, CMGI)}{Austin, Texas, United States}
+    {Software Developer}{1995 \textbf{--} 1998, Internship to Full-time}
+        \resumeItemListStart
+          \resumeItem{Designed and implemented core features of the Ding! Peer-to-Peer Instant Messenger, written in Java}
+        \resumeItemListEnd
+
+\resumeSubHeadingListEnd
+
+\section{Patents}
+  \vspace{3pt}
+  \resumeSubHeadingListStart
+    \resumeItem{\href{https://ppubs.uspto.gov/dirsearch-public/print/downloadPdf/7272786}{US-7272786}: Inventor, "Metadata, models, visualization and control"}
+    \resumeItem{\href{https://ppubs.uspto.gov/dirsearch-public/print/downloadPdf/7860969}{US-7860969}: Inventor, "Method for continuous, frame-specific click-stream recording"}
+    \resumeItem{\href{https://ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10257294}{US-10257294}: Inventor, "Data processing system program product and method for communicating information related to user activities on electronic sites"}
+    \resumeItem{\href{https://ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10567527}{US-10567527}: Inventor, "Method for continuous, frame-specific click-stream recording"}
+    \resumeItem{\href{https://ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9838489}{US-9838489}: Inventor, "Method for click-stream analysis using web directory reverse categorization"}
+    \resumeItem{\href{https://ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8417738}{US-8417738}: Inventor, "Method for client-side personalization"}
+  \resumeSubHeadingListEnd
+
+%----------- EDUCATION -----------
+
+\section{Education}
+  \vspace{3pt}
+  \resumeSubHeadingListStart
+    
+    \resumeEducationHeading
+      {New Mexico Institute of Mining and Technology}{Socorro, New Mexico, United States}
+      {B.Sc. in Computer Science;}{December 1997}
+      {}
+      {}
+    
+  \resumeSubHeadingListEnd
+
+
+%----------- HOBBIES -----------
+
+\section{Hobbies}
+  \resumeSubHeadingListStart
+    \small{\item{I play pool competitively on 8-ball and 9-ball teams in a local league (Golden Gate APA). In 2022 my 8-ball team won the GGAPA world qualifier playoffs, and we went on to compete at the APA World Championship in Las Vegas that year.}}
+    \small{\item{I play guitar and bass, and also build/collect analog synthesizer modules.}}
+  \resumeSubHeadingListEnd
+
+
+
+%----------- REFERENCES -----------
+
+\section{References}
+  \vspace{2pt}
+  \resumeSubHeadingListStart
+    \item{References available upon request.}
+  \resumeSubHeadingListEnd
+
+
+%-------------------------------------------
+\end{document}
