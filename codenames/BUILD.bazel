@@ -1,0 +1,52 @@
+load("@pip_deps//:requirements.bzl", "requirement")
+
+py_library(
+    name = "board",
+    srcs = ["board.py"],
+    data = [
+        "wordlist.txt",
+    ],
+)
+
+py_library(
+    name = "powerset",
+    srcs = ["powerset.py"],
+)
+
+py_library(
+    name = "player_nltk",
+    srcs = ["player_nltk.py"],
+    deps = [
+        ":powerset",
+        requirement("nltk"),
+    ],
+)
+
+py_library(
+    name = "player_word2vec",
+    srcs = ["player_word2vec.py"],
+    deps = [
+        ":powerset",
+        requirement("gensim"),
+    ],
+)
+
+py_binary(
+    name = "codenames",
+    srcs = ["codenames.py"],
+    main = "codenames.py",
+    deps = [
+        ":board",
+        ":player_nltk",
+        ":player_word2vec",
+    ],
+)
+
+py_binary(
+    name = "fetch_nltk_data",
+    srcs = ["fetch_nltk_data.py"],
+    main = "fetch_nltk_data.py",
+    deps = [
+        requirement("nltk"),
+    ],
+)

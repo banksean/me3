@@ -1,0 +1,6 @@
+# Direct dependencies for stuff in this repo.
+# After editing this file, be sure to run `pip-compile requirements.in` to update requirements.txt
+
+openai==1.10.0
+gensim==4.3.2
+nltk==3.8.1
