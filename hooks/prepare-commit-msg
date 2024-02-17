@@ -1,2 +1,2 @@
 #!/bin/sh
-bazel run //gencommitmsg -- $(pwd)
+bazel run //gencommitmsg -- -commit-msg-file $1 -commit-source $2 -sha1 $3 $(pwd)

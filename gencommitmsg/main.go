@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -23,8 +24,11 @@ Use the body to explain what and why vs. how
 `
 
 var (
-	help        = flag.Bool("h", false, "prtint this help message and exit")
-	temperature = flag.Float64("t", 1.0, "temperature for the GPT-3.5-turbo model")
+	help              = flag.Bool("h", false, "prtint this help message and exit")
+	temperature       = flag.Float64("t", 1.0, "temperature for the GPT-3.5-turbo model")
+	commitMsgFilename = flag.String("commit-msg-file", "", "file to write the commit message to")
+	commitSrc         = flag.String("commit-source", "", "source of the commit message")
+	commitSHA1        = flag.String("sha1", "", "SHA1 of the commit")
 )
 
 type generator struct {
@@ -87,6 +91,11 @@ func getDiff(rootDir string) (string, error) {
 }
 
 func main() {
+
+	fmt.Print("COMMIT_MSG_FILE: ", *commitMsgFilename, "\n")
+	fmt.Print("COMMIT_SOURCE: ", *commitSrc, "\n")
+	fmt.Print("SHA1: ", *commitSHA1, "\n")
+
 	flag.Parse()
 	if *help {
 		flag.PrintDefaults()
@@ -118,6 +127,14 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ChatCompletion error: %v\n", err)
 		os.Exit(1)
+	}
+
+	if *commitMsgFilename != "" {
+		err := os.WriteFile(filepath.Join(rootDir, *commitMsgFilename), []byte(msg), 0644)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "WriteFile error: %v\n", err)
+			os.Exit(1)
+		}
 	}
 	fmt.Printf("%s\n", msg)
 }
