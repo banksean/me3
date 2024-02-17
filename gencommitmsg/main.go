@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -11,30 +11,36 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
+// This text is taken verbatim from "The seven rules of a great Git commit message": https://cbea.ms/git-commit/
+const prompt = `Generate a concise git commit message written in present tense for the following code diff with the given specifications below:
+Separate subject from body with a blank line
+Limit the subject line to 50 characters
+Capitalize the subject line
+Do not end the subject line with a period
+Use the imperative mood in the subject line
+Wrap the body at 72 characters
+Use the body to explain what and why vs. how
+`
+
+var (
+	help        = flag.Bool("h", false, "prtint this help message and exit")
+	temperature = flag.Float64("t", 1.0, "temperature for the GPT-3.5-turbo model")
+)
+
 type generator struct {
 	client *openai.Client
-}
-
-func (g *generator) prompt() string {
-	locale := "en"
-	titleChars := 72
-	tmpl := `Generate a concise git commit message written in present tense for the following code diff with the given specifications below:
-Message language: %s,
-Commit message must be a maximum of %d characters.
-Exclude anything unnecessary such as translation. Your entire response will be passed directly into git commit.
-`
-	return fmt.Sprintf(tmpl, locale, titleChars)
 }
 
 func (g *generator) commitMessage(diff string) (string, error) {
 	resp, err := g.client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
+			Model:       openai.GPT3Dot5Turbo,
+			Temperature: float32(*temperature),
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
-					Content: g.prompt(),
+					Content: prompt,
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,
@@ -43,13 +49,24 @@ func (g *generator) commitMessage(diff string) (string, error) {
 			},
 		},
 	)
-	buf, err := json.MarshalIndent(resp, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	res := ""
+	err = fmt.Errorf("no assistant response")
 
-	return string(buf), err
+	for _, choice := range resp.Choices {
+		if choice.Message.Role == openai.ChatMessageRoleAssistant {
+			res = choice.Message.Content
+			err = nil
+		}
+	}
+
+	return res, err
 }
 
 func getDiff(rootDir string) (string, error) {
-	cmd := exec.Command("git", "diff", rootDir, ":(exclude)go.*", ":(exclude)*repositories.bzl")
+	cmd := exec.Command("git", "diff", rootDir, ":(exclude)go.mod", ":(exclude)go.sum", ":(exclude)*repositories.bzl")
 	cmd.Dir = rootDir
 	cmd.Env = os.Environ()
 
@@ -57,7 +74,6 @@ func getDiff(rootDir string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Printf("cmd: %+v\n", cmd)
 	if err := cmd.Start(); err != nil {
 		return "", err
 	}
@@ -71,16 +87,21 @@ func getDiff(rootDir string) (string, error) {
 }
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Printf("Usage: %s <path to git repository>\n", os.Args[0])
-		return
+	flag.Parse()
+	if *help {
+		flag.PrintDefaults()
+		os.Exit(0)
 	}
-	rootDir := os.Args[1]
+	if len(os.Args) < 2 {
+		fmt.Fprintf(os.Stderr, "Usage: %s <path to git repository>\nOr alternatively: %s $(pwd) > .gitmessage && git commit\n", os.Args[0], os.Args[0])
+		os.Exit(1)
+	}
+	rootDir := os.Args[len(os.Args)-1]
 
 	openaiAPIKey := os.Getenv("OPENAI_API_KEY")
 	if len(openaiAPIKey) == 0 {
-		fmt.Printf("OPENAI_API_KEY environment variable is not set\n")
-		return
+		fmt.Fprintf(os.Stderr, "OPENAI_API_KEY environment variable is not set\n")
+		os.Exit(1)
 	}
 
 	g := &generator{
@@ -88,16 +109,15 @@ func main() {
 	}
 	diff, err := getDiff(rootDir)
 	if err != nil {
-		fmt.Printf("getDiff error: %v\n", err)
-		return
+		fmt.Fprintf(os.Stderr, "getDiff error: %v\n", err)
+		os.Exit(1)
 	}
-	fmt.Printf("diff: \n%s\n", diff)
 
 	msg, err := g.commitMessage(diff)
 
 	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
-		return
+		fmt.Fprintf(os.Stderr, "ChatCompletion error: %v\n", err)
+		os.Exit(1)
 	}
-	fmt.Printf("response: \n%s\n", msg)
+	fmt.Printf("%s\n", msg)
 }
