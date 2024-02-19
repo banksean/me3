@@ -1,0 +1,31 @@
+cc_test(
+    name = "test",
+    srcs = ["word_generator_test.cc"],
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+      "//cpp/lib:lib",
+      "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "benchmark",
+    srcs = ["word_generator_benchmark.cc"],
+    copts = ["-Iexternal/benchmark/include"],
+    deps = [
+        "//cpp/lib:lib",
+        "@com_github_google_benchmark//:benchmark_main",
+    ],
+)
+
+cc_library(
+    name = "lib",
+    hdrs = glob(["word_generator.h"]),
+    srcs = glob(["word_generator.cc"]),
+    visibility = [
+        "//cpp:__pkg__",
+    ],
+    copts = [
+        "-std=c++20",
+    ],
+)

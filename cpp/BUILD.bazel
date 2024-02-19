@@ -1,0 +1,33 @@
+cc_binary(
+    name = "hello_world",
+    srcs = ["hello_world.cc"],
+    deps = ["@com_google_absl//absl/strings"],
+)
+
+
+cc_library(
+    name = "lib",
+    hdrs = glob(["**/*.h"]),
+    srcs = glob(["**/*.cc"]),
+    visibility = ["//main:__pkg__"],
+    copts = [
+        "-std=c++20",
+    ],
+)
+
+cc_test(
+  name = "hello_test",
+  size = "small",
+  srcs = ["hello_test.cc"],
+  deps = ["@com_google_googletest//:gtest_main"],
+)
+
+cc_test(
+    name = "hello_benchmark",
+    srcs = ["hello_benchmark.cc"],
+    copts = ["-Iexternal/benchmark/include"],
+    deps = [
+        "//lib:lib",
+        "@benchmark//:benchmark_main",
+    ],
+)
