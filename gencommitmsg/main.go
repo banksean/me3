@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	ollama "github.com/jmorganca/ollama/api"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -31,11 +33,74 @@ var (
 	commitSHA1        = flag.String("sha1", "", "SHA1 of the commit")
 )
 
-type generator struct {
+type Generator interface {
+	GenerateCommitMessage(ctx context.Context, diff string) (string, error)
+}
+
+type ollamaGenerator struct {
+	model  string
+	client *ollama.Client
+}
+
+var _ Generator = &ollamaGenerator{}
+
+func NewOLlamaGenerator() (*ollamaGenerator, error) {
+	client, err := ollama.ClientFromEnvironment()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ollamaGenerator{
+		model:  "codellama:7b",
+		client: client,
+	}, nil
+}
+
+func (g *ollamaGenerator) GenerateCommitMessage(ctx context.Context, diff string) (string, error) {
+	request := ollama.GenerateRequest{
+		Model:   g.model,
+		Prompt:  prompt + "\n" + diff,
+		Context: []int{},
+		//Images:   opts.Images,
+		Format:   "",
+		System:   "", //opts.System,
+		Template: "", //opts.Template,
+		//Options:  opts.Options,
+	}
+	ret := ""
+	fn := func(response ollama.GenerateResponse) error {
+		//fmt.Printf("response: %#v\n", response)
+		ret += response.Response
+		return nil
+	}
+	if err := g.client.Generate(ctx, &request, fn); err != nil {
+		if errors.Is(err, context.Canceled) {
+			return err.Error(), err
+		}
+		return err.Error(), err
+	}
+	return ret, nil
+}
+
+type openAIGenerator struct {
 	client *openai.Client
 }
 
-func (g *generator) commitMessage(diff string) (string, error) {
+var _ Generator = &openAIGenerator{}
+
+func NewOpenAIGenerator() (*openAIGenerator, error) {
+	openaiAPIKey := os.Getenv("OPENAI_API_KEY")
+	if len(openaiAPIKey) == 0 {
+		return nil, fmt.Errorf("OPENAI_API_KEY environment variable is not set")
+	}
+
+	g := &openAIGenerator{
+		client: openai.NewClient(openaiAPIKey),
+	}
+	return g, nil
+}
+
+func (g *openAIGenerator) GenerateCommitMessage(ctx context.Context, diff string) (string, error) {
 	resp, err := g.client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
@@ -91,11 +156,6 @@ func getDiff(rootDir string) (string, error) {
 }
 
 func main() {
-
-	fmt.Print("COMMIT_MSG_FILE: ", *commitMsgFilename, "\n")
-	fmt.Print("COMMIT_SOURCE: ", *commitSrc, "\n")
-	fmt.Print("SHA1: ", *commitSHA1, "\n")
-
 	flag.Parse()
 	if *help {
 		flag.PrintDefaults()
@@ -105,27 +165,31 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage: %s <path to git repository>\nOr alternatively: %s $(pwd) > .gitmessage && git commit\n", os.Args[0], os.Args[0])
 		os.Exit(1)
 	}
+
+	fmt.Print("COMMIT_MSG_FILE: ", *commitMsgFilename, "\n")
+	fmt.Print("COMMIT_SOURCE: ", *commitSrc, "\n")
+	fmt.Print("SHA1: ", *commitSHA1, "\n")
+
 	rootDir := os.Args[len(os.Args)-1]
 
-	openaiAPIKey := os.Getenv("OPENAI_API_KEY")
-	if len(openaiAPIKey) == 0 {
-		fmt.Fprintf(os.Stderr, "OPENAI_API_KEY environment variable is not set\n")
-		os.Exit(1)
-	}
-
-	g := &generator{
-		client: openai.NewClient(openaiAPIKey),
-	}
 	diff, err := getDiff(rootDir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "getDiff error: %v\n", err)
 		os.Exit(1)
 	}
 
-	msg, err := g.commitMessage(diff)
+	ctx := context.Background()
+	var g Generator
+
+	g, err = NewOLlamaGenerator()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "NewOLlamaGenerator error: %v\n", err)
+		os.Exit(1)
+	}
+	msg, err := g.GenerateCommitMessage(ctx, diff)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ChatCompletion error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "GenerateCommitMessage error: %v\n", err)
 		os.Exit(1)
 	}
 

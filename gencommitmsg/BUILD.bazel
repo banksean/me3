@@ -5,7 +5,10 @@ go_library(
     srcs = ["main.go"],
     importpath = "github.com/banksean/me3/gencommitmsg",
     visibility = ["//visibility:private"],
-    deps = ["@com_github_sashabaranov_go_openai//:go-openai"],
+    deps = [
+        "@com_github_jmorganca_ollama//api",
+        "@com_github_sashabaranov_go_openai//:go-openai",
+    ],
 )
 
 go_binary(
