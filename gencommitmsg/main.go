@@ -23,10 +23,21 @@ Do not end the subject line with a period
 Use the imperative mood in the subject line
 Wrap the body at 72 characters
 Use the body to explain what and why vs. how
+The output should be JSON. Schema:
+	"commit-msg": {
+		"type": "string",
+		"description": "contents of the commit message"
+	}
 `
+
+const (
+	generatorFlagOLlama = "ollama"
+	generatorFlagOpenAI = "openai"
+)
 
 var (
 	help              = flag.Bool("h", false, "prtint this help message and exit")
+	generator         = flag.String("generator", generatorFlagOLlama, "generator type")
 	temperature       = flag.Float64("t", 1.0, "temperature for the GPT-3.5-turbo model")
 	commitMsgFilename = flag.String("commit-msg-file", "", "file to write the commit message to")
 	commitSrc         = flag.String("commit-source", "", "source of the commit message")
@@ -51,28 +62,31 @@ func NewOLlamaGenerator() (*ollamaGenerator, error) {
 	}
 
 	return &ollamaGenerator{
+		// model: "llama2:latest",
+		//model: "stable-code:3b-code-q4_0",
 		model:  "codellama:7b",
 		client: client,
 	}, nil
 }
 
 func (g *ollamaGenerator) GenerateCommitMessage(ctx context.Context, diff string) (string, error) {
+	streaming := false
 	request := ollama.GenerateRequest{
 		Model:   g.model,
-		Prompt:  prompt + "\n" + diff,
+		Prompt:  diff,
 		Context: []int{},
-		//Images:   opts.Images,
-		Format:   "",
-		System:   "", //opts.System,
-		Template: "", //opts.Template,
-		//Options:  opts.Options,
+		Format:  "json",
+		Raw:     true,
+		//KeepAlive: &ollama.Duration{Duration: 10 * time.Second},
+		Stream: &streaming,
+		System: prompt,
 	}
 	ret := ""
 	fn := func(response ollama.GenerateResponse) error {
-		//fmt.Printf("response: %#v\n", response)
 		ret += response.Response
 		return nil
 	}
+	fmt.Fprintf(os.Stderr, "sending GenerateRequest: %#v\n", request)
 	if err := g.client.Generate(ctx, &request, fn); err != nil {
 		if errors.Is(err, context.Canceled) {
 			return err.Error(), err
@@ -166,10 +180,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Print("COMMIT_MSG_FILE: ", *commitMsgFilename, "\n")
-	fmt.Print("COMMIT_SOURCE: ", *commitSrc, "\n")
-	fmt.Print("SHA1: ", *commitSHA1, "\n")
-
 	rootDir := os.Args[len(os.Args)-1]
 
 	diff, err := getDiff(rootDir)
@@ -181,17 +191,29 @@ func main() {
 	ctx := context.Background()
 	var g Generator
 
-	g, err = NewOLlamaGenerator()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "NewOLlamaGenerator error: %v\n", err)
+	if *generator == generatorFlagOLlama {
+		g, err = NewOLlamaGenerator()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "NewOLlamaGenerator error: %v\n", err)
+			os.Exit(1)
+		}
+	} else if *generator == generatorFlagOpenAI {
+		g, err = NewOpenAIGenerator()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "NewOpenAIGenerator error: %v\n", err)
+			os.Exit(1)
+		}
+	} else {
+		fmt.Fprintf(os.Stderr, "unrecognized generator type: %v\n", *generator)
 		os.Exit(1)
 	}
+	fmt.Fprintf(os.Stderr, "generating commit message for diff: %q\n", diff)
 	msg, err := g.GenerateCommitMessage(ctx, diff)
-
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "GenerateCommitMessage error: %v\n", err)
 		os.Exit(1)
 	}
+	fmt.Fprintf(os.Stderr, "message generated: %q\n", msg)
 
 	if *commitMsgFilename != "" {
 		err := os.WriteFile(filepath.Join(rootDir, *commitMsgFilename), []byte(msg), 0644)
