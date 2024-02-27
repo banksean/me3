@@ -60,9 +60,9 @@ Extremely opinionated note: I do all my python work with one hand, because the o
 So, external python package dependencies are represented using two files here: `requirements.in`, and `requirements.txt`.  Only edit the former by hand.  It should
 contain only *direct* dependencies - packages your code actually imports, directly, by name.
 
-The process for adding a new python package to this repo (again, only do this for things your code actually imports - not for transitive dependencies your code does not actaully refer to by name):
-- add the name you would normally use for `pip install <package-name>` (if you were a cave person niavely following the advice well-meaning but also naive python project's README.md author - bless their heart for expecting that `pip install` command to work anywhere but their own computer), to the `requirements.in` file on its own line. You probably need to figure out which version of the package you need and also specify it on that same line, separated by `==`. See `requirements.in` for examples.
-- run `bazel run //:requirements.update` in the root directory of this repo.  This will generate the full `requirements.txt` file including all of the direct depenency's transitive dependencies as well.
+The process for adding a new python package to this repo (again, only do this for things your code actually imports - not for transitive dependencies your code does not actually refer to by name):
+- add the name you would normally use for `pip install <package-name>` (if you were a cave person naively following the advice well-meaning but also naive python project's README.md author - bless their heart for expecting that `pip install` command to work anywhere but their own computer), to the `requirements.in` file on its own line. You probably need to figure out which version of the package you need and also specify it on that same line, separated by `==`. See `requirements.in` for examples.
+- run `bazel run //:requirements.update` in the root directory of this repo.  This will generate the full `requirements.txt` file including all of the direct dependency's transitive dependencies as well.
 - in your `py_binary` or `py_library` etc target, you'll need to add new lines to the `deps=[...]` list: `requirement("<package name>"),`. (You may need to add `load("@pip_deps//:requirements.bzl", "requirement")` to that BUILD file if it's not there already.)
 
 ### Other helpful bits
