@@ -5,3 +5,5 @@ openai==1.10.0
 gensim==4.3.2
 nltk==3.8.1
 langchain==0.1.9
+async-timeout==4.0.3
+exceptiongroup==1.2.0
