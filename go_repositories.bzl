@@ -47,6 +47,18 @@ def go_repositories():
         version = "v0.0.0-20160902184237-e75332964ef5",
     )
     go_repository(
+        name = "com_github_bahlo_generic_list_go",
+        importpath = "github.com/bahlo/generic-list-go",
+        sum = "h1:5sz/EEAK+ls5wF+NeqDpk5+iNdMDXrh3z3nPnH1Wvgk=",
+        version = "v0.2.0",
+    )
+    go_repository(
+        name = "com_github_buger_jsonparser",
+        importpath = "github.com/buger/jsonparser",
+        sum = "h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=",
+        version = "v1.1.1",
+    )
+    go_repository(
         name = "com_github_burntsushi_toml",
         importpath = "github.com/BurntSushi/toml",
         sum = "h1:o7IhLm0Msx3BaB+n3Ag7L8EVlByGnpq14C4YWiu/gL8=",
@@ -383,6 +395,12 @@ def go_repositories():
         version = "v1.1.0",
     )
     go_repository(
+        name = "com_github_invopop_jsonschema",
+        importpath = "github.com/invopop/jsonschema",
+        sum = "h1:6ovsNSuvn9wEQVOyc72aycBMVQFKz7cPdMJn10CvzRI=",
+        version = "v0.12.0",
+    )
+    go_repository(
         name = "com_github_jbenet_go_context",
         importpath = "github.com/jbenet/go-context",
         sum = "h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=",
@@ -393,6 +411,12 @@ def go_repositories():
         importpath = "github.com/jmorganca/ollama",
         sum = "h1:On87q9B54yYrTy51L4IqOgH5UHRx/yKOQAZbyS8A45E=",
         version = "v0.1.27",
+    )
+    go_repository(
+        name = "com_github_josharian_intern",
+        importpath = "github.com/josharian/intern",
+        sum = "h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=",
+        version = "v1.0.0",
     )
     go_repository(
         name = "com_github_json_iterator_go",
@@ -435,6 +459,12 @@ def go_repositories():
         importpath = "github.com/leodido/go-urn",
         sum = "h1:XlAE/cm/ms7TE/VMVoduSpNBoyc2dOxHs5MZSwAN63Q=",
         version = "v1.2.4",
+    )
+    go_repository(
+        name = "com_github_mailru_easyjson",
+        importpath = "github.com/mailru/easyjson",
+        sum = "h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=",
+        version = "v0.7.7",
     )
     go_repository(
         name = "com_github_mattn_go_isatty",
@@ -633,6 +663,12 @@ def go_repositories():
         importpath = "github.com/urfave/cli/v2",
         sum = "h1:8xSQ6szndafKVRmfyeUMxkNUJQMjL1F2zmsZ+qHpfho=",
         version = "v2.27.1",
+    )
+    go_repository(
+        name = "com_github_wk8_go_ordered_map_v2",
+        importpath = "github.com/wk8/go-ordered-map/v2",
+        sum = "h1:5h/BUHu93oj4gIdvHHHGsScSTMijfx5PeYkE/fJgbpc=",
+        version = "v2.1.8",
     )
     go_repository(
         name = "com_github_xanzy_ssh_agent",

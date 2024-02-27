@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -9,14 +10,21 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"time"
+
+	"github.com/invopop/jsonschema"
 
 	ollama "github.com/jmorganca/ollama/api"
 	"github.com/sashabaranov/go-openai"
 )
 
+type CommitMessageResponse struct {
+	Message string `json:"commit-msg" jsonschema_description:"contents of the commit message"`
+}
+
 // This text is taken verbatim from "The seven rules of a great Git commit message": https://cbea.ms/git-commit/
-const prompt = `Generate a concise git commit message written in present tense for the following code diff with the given specifications below:
+const prompt2 = `Generate a concise git commit message written in present tense for the following code diff with the given specifications below:
 Separate subject from body with a blank line
 Limit the subject line to 50 characters
 Capitalize the subject line
@@ -24,11 +32,20 @@ Do not end the subject line with a period
 Use the imperative mood in the subject line
 Wrap the body at 72 characters
 Use the body to explain what and why vs. how
-The output should be JSON. Schema:
-	"commit-msg": {
-		"type": "string",
-		"description": "contents of the commit message"
-	}
+The output should be JSON, and use this schema:
+{"commit-msg": "contents of the commit message"}
+\n
+`
+const prompt = `Only use the following information to answer the question. 
+- Do not use anything else
+- Do not use your own knowledge.
+- Do not use your own opinion.
+- Do not use anything that is not in the diff.
+- Don not use the character "` + "`" + `" or "'" in your answer.
+- Be as concise as possible.
+- Be as specific as possible.
+- Be as accurate as possible.
+Task: Write a git commit message for the following diff
 `
 
 const (
@@ -38,6 +55,7 @@ const (
 
 var (
 	help              = flag.Bool("h", false, "prtint this help message and exit")
+	model             = flag.String("model", "codellama:7b", "name of the ollama model to use")
 	generator         = flag.String("generator", generatorFlagOLlama, "generator type")
 	temperature       = flag.Float64("t", 1.0, "temperature for the GPT-3.5-turbo model")
 	commitMsgFilename = flag.String("commit-msg-file", "", "file to write the commit message to")
@@ -63,22 +81,37 @@ func NewOLlamaGenerator() (*ollamaGenerator, error) {
 	}
 
 	return &ollamaGenerator{
-		// model: "llama2:latest",
+		//model: "llama2:latest",
 		// model: "stable-code:3b-code-q4_0",
-		model:  "codellama:7b",
+		//model:  "codellama:7b",
+		model:  *model,
 		client: client,
 	}, nil
 }
 
 func (g *ollamaGenerator) GenerateCommitMessage(ctx context.Context, diff string) (string, error) {
+	r := &jsonschema.Reflector{
+		AllowAdditionalProperties: false,
+		Anonymous:                 true,
+		DoNotReference:            true,
+	}
+	s := r.ReflectFromType(reflect.TypeOf(&CommitMessageResponse{}))
+	schemaStr, err := json.MarshalIndent(s.Properties, "", "  ")
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Fprintf(os.Stderr, "schema: %s\n", string(schemaStr))
 	streaming := false
 	request := ollama.GenerateRequest{
 		Model:   g.model,
 		Prompt:  diff,
 		Context: []int{},
-		Format:  "json",
-		Stream:  &streaming,
-		System:  prompt,
+		//Format:  "json",
+		Template: `[INST] <<SYS>>{{ .System }}<</SYS>>
+
+		{{ .Prompt }} [/INST]`,
+		Stream: &streaming,
+		System: prompt, // + string(schemaStr),
 	}
 	ret := ""
 	fn := func(response ollama.GenerateResponse) error {
@@ -86,15 +119,22 @@ func (g *ollamaGenerator) GenerateCommitMessage(ctx context.Context, diff string
 		return nil
 	}
 
-	ctx, done := context.WithTimeout(ctx, 5*time.Second)
+	ctx, done := context.WithTimeout(ctx, 10*time.Second)
 	defer done()
+	fmt.Fprintf(os.Stderr, "request: %#v\n", request)
 	if err := g.client.Generate(ctx, &request, fn); err != nil {
 		if errors.Is(err, context.Canceled) {
 			return err.Error(), err
 		}
 		return err.Error(), err
 	}
-	return ret, nil
+	fmt.Fprintf(os.Stderr, "raw response text: %s\n", ret)
+	resp := &CommitMessageResponse{}
+	if err := json.Unmarshal([]byte(ret), resp); err != nil {
+		fmt.Fprintf(os.Stderr, "could not un-marshal response json:\n%s\n", ret)
+		return "", err
+	}
+	return resp.Message, nil
 }
 
 type openAIGenerator struct {

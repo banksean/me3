@@ -6,6 +6,7 @@ go_library(
     importpath = "github.com/banksean/me3/gencommitmsg",
     visibility = ["//visibility:private"],
     deps = [
+        "@com_github_invopop_jsonschema//:jsonschema",
         "@com_github_jmorganca_ollama//api",
         "@com_github_sashabaranov_go_openai//:go-openai",
     ],
