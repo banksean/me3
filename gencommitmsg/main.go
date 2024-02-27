@@ -24,7 +24,7 @@ type CommitMessageResponse struct {
 }
 
 // This text is taken verbatim from "The seven rules of a great Git commit message": https://cbea.ms/git-commit/
-const prompt2 = `Generate a concise git commit message written in present tense for the following code diff with the given specifications below:
+const jsonSchemaPrompt = `Generate a concise git commit message written in present tense for the following code diff with the given specifications below:
 Separate subject from body with a blank line
 Limit the subject line to 50 characters
 Capitalize the subject line
@@ -33,10 +33,9 @@ Use the imperative mood in the subject line
 Wrap the body at 72 characters
 Use the body to explain what and why vs. how
 The output should be JSON, and use this schema:
-{"commit-msg": "contents of the commit message"}
 \n
 `
-const prompt = `Only use the following information to answer the question. 
+const freeTextPrompt = `Only use the following information to answer the question. 
 - Do not use anything else
 - Do not use your own knowledge.
 - Do not use your own opinion.
@@ -45,7 +44,7 @@ const prompt = `Only use the following information to answer the question.
 - Be as concise as possible.
 - Be as specific as possible.
 - Be as accurate as possible.
-Task: Write a git commit message for the following diff
+Task: Write a git commit message for the following diff:
 `
 
 const (
@@ -56,40 +55,16 @@ const (
 var (
 	help              = flag.Bool("h", false, "prtint this help message and exit")
 	model             = flag.String("model", "codellama:7b", "name of the ollama model to use")
+	systemPrompt      = flag.String("system-prompt", "json-schema", "name of the system prompt to use")
 	generator         = flag.String("generator", generatorFlagOLlama, "generator type")
 	temperature       = flag.Float64("t", 1.0, "temperature for the GPT-3.5-turbo model")
 	commitMsgFilename = flag.String("commit-msg-file", "", "file to write the commit message to")
 	commitSrc         = flag.String("commit-source", "", "source of the commit message")
 	commitSHA1        = flag.String("sha1", "", "SHA1 of the commit")
+	prompts           map[string]string
 )
 
-type Generator interface {
-	GenerateCommitMessage(ctx context.Context, diff string) (string, error)
-}
-
-type ollamaGenerator struct {
-	model  string
-	client *ollama.Client
-}
-
-var _ Generator = &ollamaGenerator{}
-
-func NewOLlamaGenerator() (*ollamaGenerator, error) {
-	client, err := ollama.ClientFromEnvironment()
-	if err != nil {
-		return nil, err
-	}
-
-	return &ollamaGenerator{
-		//model: "llama2:latest",
-		// model: "stable-code:3b-code-q4_0",
-		//model:  "codellama:7b",
-		model:  *model,
-		client: client,
-	}, nil
-}
-
-func (g *ollamaGenerator) GenerateCommitMessage(ctx context.Context, diff string) (string, error) {
+func init() {
 	r := &jsonschema.Reflector{
 		AllowAdditionalProperties: false,
 		Anonymous:                 true,
@@ -100,18 +75,56 @@ func (g *ollamaGenerator) GenerateCommitMessage(ctx context.Context, diff string
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Fprintf(os.Stderr, "schema: %s\n", string(schemaStr))
+	prompts = map[string]string{
+		"json-schema": jsonSchemaPrompt + string(schemaStr) + "\n",
+		"free-text":   freeTextPrompt,
+	}
+}
+
+type Generator interface {
+	GenerateCommitMessage(ctx context.Context, diff string) (string, error)
+}
+
+type ollamaGenerator struct {
+	model        string
+	systemPrompt string
+	client       *ollama.Client
+}
+
+var _ Generator = &ollamaGenerator{}
+
+func NewOLlamaGenerator() (*ollamaGenerator, error) {
+	client, err := ollama.ClientFromEnvironment()
+	if err != nil {
+		return nil, err
+	}
+
+	prompt, ok := prompts[*systemPrompt]
+	if !ok {
+		prompt = freeTextPrompt
+	}
+	return &ollamaGenerator{
+		//model: "llama2:latest",
+		// model: "stable-code:3b-code-q4_0",
+		//model:  "codellama:7b",
+		model:        *model,
+		systemPrompt: prompt,
+		client:       client,
+	}, nil
+}
+
+func (g *ollamaGenerator) GenerateCommitMessage(ctx context.Context, diff string) (string, error) {
 	streaming := false
 	request := ollama.GenerateRequest{
 		Model:   g.model,
 		Prompt:  diff,
 		Context: []int{},
-		//Format:  "json",
+		Format:  "json",
 		Template: `[INST] <<SYS>>{{ .System }}<</SYS>>
 
 		{{ .Prompt }} [/INST]`,
 		Stream: &streaming,
-		System: prompt, // + string(schemaStr),
+		System: g.systemPrompt,
 	}
 	ret := ""
 	fn := func(response ollama.GenerateResponse) error {
@@ -138,7 +151,8 @@ func (g *ollamaGenerator) GenerateCommitMessage(ctx context.Context, diff string
 }
 
 type openAIGenerator struct {
-	client *openai.Client
+	systemPrompt string
+	client       *openai.Client
 }
 
 var _ Generator = &openAIGenerator{}
@@ -149,8 +163,13 @@ func NewOpenAIGenerator() (*openAIGenerator, error) {
 		return nil, fmt.Errorf("OPENAI_API_KEY environment variable is not set")
 	}
 
+	prompt, ok := prompts[*systemPrompt]
+	if !ok {
+		prompt = freeTextPrompt
+	}
 	g := &openAIGenerator{
-		client: openai.NewClient(openaiAPIKey),
+		client:       openai.NewClient(openaiAPIKey),
+		systemPrompt: prompt,
 	}
 	return g, nil
 }
@@ -164,7 +183,7 @@ func (g *openAIGenerator) GenerateCommitMessage(ctx context.Context, diff string
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
-					Content: prompt,
+					Content: g.systemPrompt,
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,
