@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	ollama "github.com/jmorganca/ollama/api"
 	"github.com/sashabaranov/go-openai"
@@ -63,7 +64,7 @@ func NewOLlamaGenerator() (*ollamaGenerator, error) {
 
 	return &ollamaGenerator{
 		// model: "llama2:latest",
-		//model: "stable-code:3b-code-q4_0",
+		// model: "stable-code:3b-code-q4_0",
 		model:  "codellama:7b",
 		client: client,
 	}, nil
@@ -76,17 +77,17 @@ func (g *ollamaGenerator) GenerateCommitMessage(ctx context.Context, diff string
 		Prompt:  diff,
 		Context: []int{},
 		Format:  "json",
-		Raw:     true,
-		//KeepAlive: &ollama.Duration{Duration: 10 * time.Second},
-		Stream: &streaming,
-		System: prompt,
+		Stream:  &streaming,
+		System:  prompt,
 	}
 	ret := ""
 	fn := func(response ollama.GenerateResponse) error {
 		ret += response.Response
 		return nil
 	}
-	fmt.Fprintf(os.Stderr, "sending GenerateRequest: %#v\n", request)
+
+	ctx, done := context.WithTimeout(ctx, 5*time.Second)
+	defer done()
 	if err := g.client.Generate(ctx, &request, fn); err != nil {
 		if errors.Is(err, context.Canceled) {
 			return err.Error(), err
@@ -207,13 +208,12 @@ func main() {
 		fmt.Fprintf(os.Stderr, "unrecognized generator type: %v\n", *generator)
 		os.Exit(1)
 	}
-	fmt.Fprintf(os.Stderr, "generating commit message for diff: %q\n", diff)
+
 	msg, err := g.GenerateCommitMessage(ctx, diff)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "GenerateCommitMessage error: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Fprintf(os.Stderr, "message generated: %q\n", msg)
 
 	if *commitMsgFilename != "" {
 		err := os.WriteFile(filepath.Join(rootDir, *commitMsgFilename), []byte(msg), 0644)
