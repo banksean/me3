@@ -1,0 +1,10 @@
+load("@pip_deps//:requirements.bzl", "requirement")
+
+py_binary(
+    name = "demo",
+    srcs = ["demo.py"],
+    main = "demo.py",
+    deps = [
+      requirement("langchain"),
+    ],
+)
