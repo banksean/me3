@@ -104,9 +104,6 @@ func NewOLlamaGenerator() (*ollamaGenerator, error) {
 		prompt = freeTextPrompt
 	}
 	return &ollamaGenerator{
-		//model: "llama2:latest",
-		// model: "stable-code:3b-code-q4_0",
-		//model:  "codellama:7b",
 		model:        *model,
 		systemPrompt: prompt,
 		client:       client,
@@ -134,14 +131,14 @@ func (g *ollamaGenerator) GenerateCommitMessage(ctx context.Context, diff string
 
 	ctx, done := context.WithTimeout(ctx, 10*time.Second)
 	defer done()
-	fmt.Fprintf(os.Stderr, "request: %#v\n", request)
+
 	if err := g.client.Generate(ctx, &request, fn); err != nil {
 		if errors.Is(err, context.Canceled) {
 			return err.Error(), err
 		}
 		return err.Error(), err
 	}
-	fmt.Fprintf(os.Stderr, "raw response text: %s\n", ret)
+
 	resp := &CommitMessageResponse{}
 	if err := json.Unmarshal([]byte(ret), resp); err != nil {
 		fmt.Fprintf(os.Stderr, "could not un-marshal response json:\n%s\n", ret)
