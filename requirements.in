@@ -10,3 +10,4 @@ async-timeout==4.0.3
 exceptiongroup==1.2.0
 orjson==3.9.15
 beautifulsoup4==4.12.3
+greenlet==3.0.3

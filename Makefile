@@ -25,6 +25,10 @@ update-go-bazel-deps:
 .PHONY: gazelle
 gazelle: update-go-bazel-deps update-go-bazel-files
 
+.PHONY: update-py-deps
+update-py-deps:
+	$(BAZEL) run //:requirements.update
+
 .PHONY: buildifier
 buildifier:
 	$(BAZEL) run //:buildifier
