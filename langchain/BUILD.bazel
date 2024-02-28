@@ -6,5 +6,7 @@ py_binary(
     main = "demo.py",
     deps = [
       requirement("langchain"),
+      requirement("langchain-community"),
+      requirement("beautifulsoup4"),
     ],
 )
