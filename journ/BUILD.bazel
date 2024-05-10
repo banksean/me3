@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "journ_lib",
+    srcs = ["journ.go"],
+    importpath = "github.com/banksean/me3/journ",
+    visibility = ["//visibility:private"],
+)
+
+go_binary(
+    name = "journ",
+    embed = [":journ_lib"],
+    visibility = ["//visibility:public"],
+)
