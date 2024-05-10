@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "codenames-go_lib",
+    srcs = ["codenames.go"],
+    embedsrcs = ["wordlist.txt"],
+    importpath = "github.com/banksean/me3/codenames-go",
+    visibility = ["//visibility:private"],
+)
+
+go_binary(
+    name = "codenames-go",
+    embed = [":codenames-go_lib"],
+    visibility = ["//visibility:public"],
+)
