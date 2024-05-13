@@ -8,7 +8,7 @@ go_library(
     visibility = ["//visibility:private"],
     deps = [
         "@com_github_chzyer_readline//:readline",
-        "@com_github_jedib0t_go_pretty_v6//table",
+        "@com_github_olekukonko_tablewriter//:tablewriter",
     ],
 )
 

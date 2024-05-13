@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"math/rand"
+	"os"
 	"sort"
 	"strings"
 
 	"github.com/chzyer/readline"
-	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/olekukonko/tablewriter"
 
 	_ "embed"
 )
@@ -23,14 +25,6 @@ type gameBoard struct {
 	teamForCard  map[string]string
 	state        gameState
 }
-
-/*
-States:
-- RedClue
-- RedGuess
-- BlueClue
-- BlueGuess
-*/
 
 // "State Machine" pattern.
 type gameState interface {
@@ -86,31 +80,48 @@ func (s *FieldAgentTurn) Pass() error {
 	return fmt.Errorf("field agent cannot pass")
 }
 
-func (g *gameBoard) String() string {
-	tw := table.NewWriter()
+var (
+	defaultColor = tablewriter.Colors{tablewriter.Normal, tablewriter.FgWhiteColor, tablewriter.BgBlackColor}
+	teamColor    = map[string]tablewriter.Colors{
+		"RED":       {tablewriter.Normal, tablewriter.FgRedColor, tablewriter.BgBlackColor},
+		"BLUE":      {tablewriter.Normal, tablewriter.FgBlueColor, tablewriter.BgBlackColor},
+		"BYSTANDER": {tablewriter.Normal, tablewriter.FgGreenColor, tablewriter.BgBlackColor},
+		"ASSASSIN":  {tablewriter.Normal, tablewriter.FgYellowColor, tablewriter.BgBlackColor},
+	}
+)
+
+func (g *gameBoard) WriteTable(w io.Writer) {
+	tw := tablewriter.NewWriter(w)
+	tw.SetBorder(false)
+	tw.SetBorders(tablewriter.Border{})
+	tw.SetCenterSeparator(" ")
+	tw.SetColumnSeparator(" ")
+	tw.SetRowSeparator(" ")
+	tw.SetRowLine(true)
 	allCards := []string{}
 	for _, cards := range g.cards {
 		for c := range cards {
 			allCards = append(allCards, c)
 		}
 	}
-	for i, c := range allCards {
+	sort.Strings(allCards)
+	allColors := []tablewriter.Colors{}
+	for _, c := range allCards {
 		if _, ok := g.guessedWords[c]; ok {
 			team := g.teamForCard[c]
-			allCards[i] = fmt.Sprintf("%s [%s]", c, team)
+			allColors = append(allColors, teamColor[team])
+		} else {
+			allColors = append(allColors, defaultColor)
 		}
 	}
-	sort.Strings(allCards)
 
 	for row := 0; row < 5; row++ {
-		tableRow := table.Row{}
 		rowCards := allCards[row*5 : row*5+5]
-		for _, c := range rowCards {
-			tableRow = append(tableRow, c)
-		}
-		tw.AppendRow(tableRow)
+		rowColors := allColors[row*5 : row*5+5]
+
+		tw.Rich(rowCards, rowColors)
 	}
-	return tw.Render()
+	tw.Render()
 }
 
 func (g *gameBoard) currentScore() map[string]int {
@@ -177,7 +188,8 @@ func main() {
 	defer rl.Close()
 
 	for {
-		fmt.Printf("game:\n%+v\n", game.String())
+		fmt.Printf("game:\n")
+		game.WriteTable(os.Stdout)
 		fmt.Printf("score:\n%+v\n", game.currentScore())
 		line, err := rl.Readline()
 		if err != nil { // io.EOF
