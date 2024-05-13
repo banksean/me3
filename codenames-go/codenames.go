@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/chzyer/readline"
 	"github.com/jedib0t/go-pretty/v6/table"
 
 	_ "embed"
@@ -168,9 +169,26 @@ func main() {
 			game.teamForCard[card] = team
 		}
 	}
-	fmt.Printf("t4c: %+v\n", game.teamForCard)
-	team, err := game.guess("water")
-	fmt.Printf("team: %v, err: %v\n", team, err)
-	fmt.Printf("game:\n%+v\n", game.String())
-	fmt.Printf("score:\n%+v\n", game.currentScore())
+
+	rl, err := readline.New("> ")
+	if err != nil {
+		panic(err)
+	}
+	defer rl.Close()
+
+	for {
+		fmt.Printf("game:\n%+v\n", game.String())
+		fmt.Printf("score:\n%+v\n", game.currentScore())
+		line, err := rl.Readline()
+		if err != nil { // io.EOF
+			break
+		}
+
+		team, err := game.guess(line)
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+		} else {
+			fmt.Printf("%q belongs to %q\n", line, team)
+		}
+	}
 }
