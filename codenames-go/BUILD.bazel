@@ -6,6 +6,7 @@ go_library(
     embedsrcs = ["wordlist.txt"],
     importpath = "github.com/banksean/me3/codenames-go",
     visibility = ["//visibility:private"],
+    deps = ["@com_github_jedib0t_go_pretty_v6//table"],
 )
 
 go_binary(

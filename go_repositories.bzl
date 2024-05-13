@@ -137,6 +137,12 @@ def go_repositories():
         version = "v1.18.1",
     )
     go_repository(
+        name = "com_github_felixge_fgprof",
+        importpath = "github.com/felixge/fgprof",
+        sum = "h1:VvyZxILNuCiUCSXtPtYmmtGvb65nqXh2QFWc0Wpf2/g=",
+        version = "v0.9.3",
+    )
+    go_repository(
         name = "com_github_gabriel_vasile_mimetype",
         importpath = "github.com/gabriel-vasile/mimetype",
         sum = "h1:w5qFW6JKBz9Y393Y4q372O9A7cUSequkh1Q7OhCmWKU=",
@@ -353,6 +359,12 @@ def go_repositories():
         version = "v1.0.0",
     )
     go_repository(
+        name = "com_github_google_pprof",
+        importpath = "github.com/google/pprof",
+        sum = "h1:1FjCyPC+syAzJ5/2S8fqdZK1R22vvA0J7JZKcuOIQ7Y=",
+        version = "v0.0.0-20211214055906-6f57359322fd",
+    )
+    go_repository(
         name = "com_github_google_s2a_go",
         importpath = "github.com/google/s2a-go",
         sum = "h1:1kZ/sQM3srePvKs3tXAvQzo66XfcReoqFpIpIccE7Oc=",
@@ -405,6 +417,12 @@ def go_repositories():
         importpath = "github.com/jbenet/go-context",
         sum = "h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=",
         version = "v0.0.0-20150711004518-d14ea06fba99",
+    )
+    go_repository(
+        name = "com_github_jedib0t_go_pretty_v6",
+        importpath = "github.com/jedib0t/go-pretty/v6",
+        sum = "h1:ACteMBRrrmm1gMsXe9PSTOClQ63IXDUt03H5U+UV8OU=",
+        version = "v6.5.9",
     )
     go_repository(
         name = "com_github_jmorganca_ollama",
@@ -475,8 +493,8 @@ def go_repositories():
     go_repository(
         name = "com_github_mattn_go_runewidth",
         importpath = "github.com/mattn/go-runewidth",
-        sum = "h1:+xnbZSEeDbOIg5/mE6JF0w6n9duR1l3/WmbinWVwUuU=",
-        version = "v0.0.14",
+        sum = "h1:UNAjwbU9l54TA3KzvqLGxwWjHmMgBUVhBiTjelZgg3U=",
+        version = "v0.0.15",
     )
     go_repository(
         name = "com_github_mattn_go_sqlite3",
@@ -561,6 +579,12 @@ def go_repositories():
         importpath = "github.com/pkg/errors",
         sum = "h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=",
         version = "v0.9.1",
+    )
+    go_repository(
+        name = "com_github_pkg_profile",
+        importpath = "github.com/pkg/profile",
+        sum = "h1:hnbDkaNWPCLMO9wGLdBFTIZvzDrDfBM2072E1S9gJkA=",
+        version = "v1.7.0",
     )
     go_repository(
         name = "com_github_pmezard_go_difflib",
