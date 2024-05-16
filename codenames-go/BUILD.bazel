@@ -14,6 +14,7 @@ go_library(
         "@com_github_chzyer_readline//:readline",
         "@com_github_jmorganca_ollama//api",
         "@com_github_olekukonko_tablewriter//:tablewriter",
+        "@org_bitbucket_creachadair_stringset//:stringset",
     ],
 )
 

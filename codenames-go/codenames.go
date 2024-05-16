@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"os"
 	"sort"
 	"strings"
 
+	"bitbucket.org/creachadair/stringset"
 	"github.com/chzyer/readline"
 	"github.com/olekukonko/tablewriter"
 
@@ -26,8 +28,8 @@ var (
 )
 
 type gameBoard struct {
-	cards        map[string]map[string]any
-	guessedWords map[string]any
+	cards        map[string]stringset.Set
+	guessedWords stringset.Set
 	teamForCard  map[string]string
 	rl           *readline.Instance
 	state        gameState
@@ -103,7 +105,7 @@ func (g *gameBoard) guess(word string) (string, error) {
 	if _, ok := g.guessedWords[word]; ok {
 		return "", fmt.Errorf("already guessed %q", word)
 	}
-	g.guessedWords[word] = nil
+	g.guessedWords.Add(word)
 	for t, c := range g.cards {
 		if _, ok := c[word]; ok {
 			return t, nil
@@ -112,13 +114,11 @@ func (g *gameBoard) guess(word string) (string, error) {
 	return "", fmt.Errorf("%q is not one of the cards currently in play", word)
 }
 
-type deck []string
-
-func draw(d deck, n int) (map[string]any, deck) {
-	ret := map[string]any{}
+func draw(d []string, n int) (stringset.Set, []string) {
+	ret := stringset.New()
 	for i := 0; i < n; i++ {
 		idx := rand.Intn(len(d))
-		ret[d[idx]] = nil
+		ret.Add(d[idx])
 		d = append(d[:idx], d[idx+1:]...)
 	}
 
@@ -136,8 +136,8 @@ func filterInput(r rune) (rune, bool) {
 
 func NewGameBoard(d []string) *gameBoard {
 	game := &gameBoard{
-		cards:        make(map[string]map[string]any),
-		guessedWords: make(map[string]any),
+		cards:        make(map[string]stringset.Set),
+		guessedWords: stringset.New(),
 		teamForCard:  make(map[string]string),
 	}
 	game.cards[RED], d = draw(d, 8)
@@ -187,8 +187,7 @@ func NewGameBoard(d []string) *gameBoard {
 
 func main() {
 	words := strings.Split(wordlistFile, "\n")
-	d := deck(words)
-	game := NewGameBoard(d)
+	game := NewGameBoard(words)
 
 	rl, err := readline.NewEx(
 		&readline.Config{
@@ -214,6 +213,20 @@ func main() {
 		err = game.state.ProcessInput(strings.TrimSpace(line))
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
+		}
+
+		// check for win conditions
+		s := game.currentScore()
+		winner := ""
+		for team, score := range s {
+			if len(game.cards[team]) == score {
+				winner = team
+			}
+		}
+
+		if winner != "" {
+			fmt.Printf("Winner is %s\nFinal scores:\n%v\n", winner, s)
+			os.Exit(0)
 		}
 	}
 }
