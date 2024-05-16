@@ -15,8 +15,7 @@ type OLlamaSpyMasterTurn struct {
 	client *ollama.Client
 }
 
-func NewOLllamaSpyMaster(game *gameBoard, team string) gameState {
-
+func NewOLllamaSpyMaster(game *gameBoard, team string) *OLlamaSpyMasterTurn {
 	client, err := ollama.ClientFromEnvironment()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -24,7 +23,7 @@ func NewOLllamaSpyMaster(game *gameBoard, team string) gameState {
 	}
 
 	ret := &OLlamaSpyMasterTurn{
-		team:   RED,
+		team:   team,
 		game:   game,
 		client: client,
 	}
@@ -33,8 +32,6 @@ func NewOLllamaSpyMaster(game *gameBoard, team string) gameState {
 }
 
 func (s *OLlamaSpyMasterTurn) PromptInput() (string, error) {
-	s.game.WriteTable(os.Stdout, true)
-
 	ourCards := s.game.cards[s.team]
 
 	ourWords := []string{}
@@ -94,6 +91,7 @@ Do not provide any explanation for why you chose the single word clue.
 
 func (s *OLlamaSpyMasterTurn) ProcessInput(input string) error {
 	s.game.state = s.game.transitions[s.team+"CLUE"]
+
 	fat := s.game.state.(*HumanFieldAgentTurn)
 	fat.clue = input
 	return nil

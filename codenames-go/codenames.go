@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	RED       = "red"
-	BLUE      = "blue"
-	BYSTANDER = "bystander"
-	ASSASSIN  = "assassin"
+	RED       = "RED"
+	BLUE      = "BLUE"
+	BYSTANDER = "BYSTANDER"
+	ASSASSIN  = "ASSASSIN"
 )
 
 var (
@@ -176,10 +176,10 @@ func NewGameBoard(d []string) *gameBoard {
 	blueSpyMaster = ollamaSpyMasterBlue
 
 	game.transitions = map[string]gameState{
-		"REDCLUE":   redFieldAgent,
-		"REDGUESS":  blueSpyMaster,
-		"BLUECLUE":  blueFieldAgent,
-		"BLUEGUESS": redSpyMaster,
+		RED + "CLUE":   redFieldAgent,
+		RED + "GUESS":  blueSpyMaster,
+		BLUE + "CLUE":  blueFieldAgent,
+		BLUE + "GUESS": redSpyMaster,
 	}
 	game.state = redSpyMaster
 	return game
@@ -206,7 +206,7 @@ func main() {
 	game.rl = rl
 
 	for {
-		fmt.Printf("score: %v\n", game.currentScore())
+		//fmt.Printf("score: %v\n", game.currentScore())
 		line, err := game.state.PromptInput()
 		if err != nil { // io.EOF
 			break

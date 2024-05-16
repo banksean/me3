@@ -75,8 +75,12 @@ func (s *HumanFieldAgentTurn) ProcessInput(input string) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("%q belongs to team %s\n", input, team)
+	if team == s.team {
+		fmt.Printf("\nCORRECT ")
+	} else {
+		fmt.Printf("\nINCORRECT ")
+	}
+	fmt.Printf("%q belongs to team %s\n\n", input, team)
 	s.game.state = s.game.transitions[s.team+"GUESS"]
 
 	return nil
