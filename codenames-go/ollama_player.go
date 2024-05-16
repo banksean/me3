@@ -59,19 +59,12 @@ Do not provide any explanation for why you chose the single word clue.
 > `,
 		s.team, strings.Join(ourRemainingWords.Elements(), ", "), strings.Join(notOurWords.Elements(), ", "))
 
-	//input, err := s.game.rl.Readline()
-
 	streaming := false
 	request := ollama.GenerateRequest{
 		Model:   "llama3",
 		Prompt:  prompt,
 		Context: []int{},
-		//Format:  "json",
-		//Template: `[INST] <<SYS>>{{ .System }}<</SYS>>
-		//
-		//	{{ .Prompt }} [/INST]`,
-		Stream: &streaming,
-		//System: g.systemPrompt,
+		Stream:  &streaming,
 	}
 	ret := ""
 	fn := func(response ollama.GenerateResponse) error {

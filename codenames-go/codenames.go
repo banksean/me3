@@ -144,11 +144,9 @@ func NewGameBoard(d []string) *gameBoard {
 	game.cards[BLUE], d = draw(d, 9)
 	game.cards[BYSTANDER], d = draw(d, 7)
 	game.cards[ASSASSIN], _ = draw(d, 1)
-	//	pcItems := []readline.PrefixCompleterInterface{}
 	for team, cards := range game.cards {
 		for card := range cards {
 			game.teamForCard[card] = team
-			//		pcItems = append(pcItems, readline.PcItem(card))
 		}
 	}
 
@@ -194,7 +192,6 @@ func main() {
 			InterruptPrompt:     "^C",
 			Prompt:              "> ",
 			FuncFilterInputRune: filterInput,
-			//AutoComplete:        readline.NewPrefixCompleter(pcItems...),
 		},
 	)
 
@@ -205,7 +202,6 @@ func main() {
 	game.rl = rl
 
 	for {
-		//fmt.Printf("score: %v\n", game.currentScore())
 		line, err := game.state.PromptInput()
 		if err != nil { // io.EOF
 			break
