@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-	"os"
 	"sort"
 	"strings"
 
@@ -12,6 +11,13 @@ import (
 	"github.com/olekukonko/tablewriter"
 
 	_ "embed"
+)
+
+const (
+	RED       = "red"
+	BLUE      = "blue"
+	BYSTANDER = "bystander"
+	ASSASSIN  = "assassin"
 )
 
 var (
@@ -23,74 +29,28 @@ type gameBoard struct {
 	cards        map[string]map[string]any
 	guessedWords map[string]any
 	teamForCard  map[string]string
+	rl           *readline.Instance
 	state        gameState
+	transitions  map[string]gameState
 }
 
 // "State Machine" pattern.
 type gameState interface {
 	PromptInput() (string, error)
-	Guess(string) error
-	Clue(string, int) error
-	Pass() error
-}
-
-type SpyMasterTurn struct {
-	game gameBoard
-	team string
-}
-
-func (s *SpyMasterTurn) PromptInput() (string, error) {
-	fmt.Printf("%s team spymaster: offer a clue\n> ", s.team)
-	return "", nil
-}
-
-func (s *SpyMasterTurn) Guess(string) error {
-	return fmt.Errorf("spymaster cannot make guesses")
-}
-
-func (s *SpyMasterTurn) Clue(clue string, num int) error {
-	return nil
-}
-
-func (s *SpyMasterTurn) Pass() error {
-	return fmt.Errorf("spymaster cannot pass")
-}
-
-type FieldAgentTurn struct {
-	game     gameBoard
-	team     string
-	clue     string
-	numWords int
-}
-
-func (s *FieldAgentTurn) PromptInput() (string, error) {
-	fmt.Printf("%s team field agent: make a guess for %q, %d\n> ", s.team, s.clue, s.numWords)
-	return "", nil
-}
-
-func (s *FieldAgentTurn) Guess(string) error {
-	return nil
-}
-
-func (s *FieldAgentTurn) Clue(clue string, num int) error {
-	return fmt.Errorf("field agent cannot offer clues")
-}
-
-func (s *FieldAgentTurn) Pass() error {
-	return fmt.Errorf("field agent cannot pass")
+	ProcessInput(string) error
 }
 
 var (
 	defaultColor = tablewriter.Colors{tablewriter.Normal, tablewriter.FgWhiteColor, tablewriter.BgBlackColor}
 	teamColor    = map[string]tablewriter.Colors{
-		"RED":       {tablewriter.Normal, tablewriter.FgRedColor, tablewriter.BgBlackColor},
-		"BLUE":      {tablewriter.Normal, tablewriter.FgBlueColor, tablewriter.BgBlackColor},
-		"BYSTANDER": {tablewriter.Normal, tablewriter.FgGreenColor, tablewriter.BgBlackColor},
-		"ASSASSIN":  {tablewriter.Normal, tablewriter.FgYellowColor, tablewriter.BgBlackColor},
+		RED:       {tablewriter.Bold, tablewriter.FgRedColor, tablewriter.BgBlackColor},
+		BLUE:      {tablewriter.Bold, tablewriter.FgBlueColor, tablewriter.BgBlackColor},
+		BYSTANDER: {tablewriter.Bold, tablewriter.FgWhiteColor, tablewriter.BgBlackColor},
+		ASSASSIN:  {tablewriter.Bold, tablewriter.FgYellowColor, tablewriter.BgBlackColor},
 	}
 )
 
-func (g *gameBoard) WriteTable(w io.Writer) {
+func (g *gameBoard) WriteTable(w io.Writer, spyMasterView bool) {
 	tw := tablewriter.NewWriter(w)
 	tw.SetBorder(false)
 	tw.SetBorders(tablewriter.Border{})
@@ -106,10 +66,13 @@ func (g *gameBoard) WriteTable(w io.Writer) {
 	}
 	sort.Strings(allCards)
 	allColors := []tablewriter.Colors{}
-	for _, c := range allCards {
-		if _, ok := g.guessedWords[c]; ok {
+	for i, c := range allCards {
+		if _, guessed := g.guessedWords[c]; guessed || spyMasterView {
 			team := g.teamForCard[c]
 			allColors = append(allColors, teamColor[team])
+			if guessed {
+				allCards[i] = strings.ToUpper(c)
+			}
 		} else {
 			allColors = append(allColors, defaultColor)
 		}
@@ -162,45 +125,95 @@ func draw(d deck, n int) (map[string]any, deck) {
 	return ret, d
 }
 
-func main() {
-	words := strings.Split(wordlistFile, "\n")
-	d := deck(words)
+func filterInput(r rune) (rune, bool) {
+	switch r {
+	// block CtrlZ feature
+	case readline.CharCtrlZ:
+		return r, false
+	}
+	return r, true
+}
 
+func NewGameBoard(d []string) *gameBoard {
 	game := &gameBoard{
 		cards:        make(map[string]map[string]any),
 		guessedWords: make(map[string]any),
 		teamForCard:  make(map[string]string),
 	}
-	game.cards["RED"], d = draw(d, 8)
-	game.cards["BLUE"], d = draw(d, 9)
-	game.cards["BYSTANDER"], d = draw(d, 7)
-	game.cards["ASSASSIN"], _ = draw(d, 1)
+	game.cards[RED], d = draw(d, 8)
+	game.cards[BLUE], d = draw(d, 9)
+	game.cards[BYSTANDER], d = draw(d, 7)
+	game.cards[ASSASSIN], _ = draw(d, 1)
+	//	pcItems := []readline.PrefixCompleterInterface{}
 	for team, cards := range game.cards {
 		for card := range cards {
 			game.teamForCard[card] = team
+			//		pcItems = append(pcItems, readline.PcItem(card))
 		}
 	}
 
-	rl, err := readline.New("> ")
+	ollamaSpyMasterRed := NewOLllamaSpyMaster(game, RED)
+	ollamaSpyMasterBlue := NewOLllamaSpyMaster(game, BLUE)
+
+	var redFieldAgent gameState = &HumanFieldAgentTurn{
+		team: RED,
+		game: game,
+	}
+	var redSpyMaster gameState = &HumanSpyMasterTurn{
+		team: RED,
+		game: game,
+	}
+	var blueFieldAgent gameState = &HumanFieldAgentTurn{
+		team: BLUE,
+		game: game,
+	}
+	var blueSpyMaster gameState = &HumanSpyMasterTurn{
+		team: BLUE,
+		game: game,
+	}
+
+	redSpyMaster = ollamaSpyMasterRed
+	blueSpyMaster = ollamaSpyMasterBlue
+
+	game.transitions = map[string]gameState{
+		"REDCLUE":   redFieldAgent,
+		"REDGUESS":  blueSpyMaster,
+		"BLUECLUE":  blueFieldAgent,
+		"BLUEGUESS": redSpyMaster,
+	}
+	game.state = redSpyMaster
+	return game
+}
+
+func main() {
+	words := strings.Split(wordlistFile, "\n")
+	d := deck(words)
+	game := NewGameBoard(d)
+
+	rl, err := readline.NewEx(
+		&readline.Config{
+			InterruptPrompt:     "^C",
+			Prompt:              "> ",
+			FuncFilterInputRune: filterInput,
+			//AutoComplete:        readline.NewPrefixCompleter(pcItems...),
+		},
+	)
+
 	if err != nil {
 		panic(err)
 	}
 	defer rl.Close()
+	game.rl = rl
 
 	for {
-		fmt.Printf("game:\n")
-		game.WriteTable(os.Stdout)
-		fmt.Printf("score:\n%+v\n", game.currentScore())
-		line, err := rl.Readline()
+		fmt.Printf("score: %v\n", game.currentScore())
+		line, err := game.state.PromptInput()
 		if err != nil { // io.EOF
 			break
 		}
-
-		team, err := game.guess(line)
+		err = game.state.ProcessInput(strings.TrimSpace(line))
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
-		} else {
-			fmt.Printf("%q belongs to %q\n", line, team)
 		}
 	}
 }

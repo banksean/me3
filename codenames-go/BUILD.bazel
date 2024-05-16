@@ -1,13 +1,18 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
 
 go_library(
     name = "codenames-go_lib",
-    srcs = ["codenames.go"],
+    srcs = [
+        "codenames.go",
+        "interactive_player.go",
+        "ollama_player.go",
+    ],
     embedsrcs = ["wordlist.txt"],
     importpath = "github.com/banksean/me3/codenames-go",
     visibility = ["//visibility:private"],
     deps = [
         "@com_github_chzyer_readline//:readline",
+        "@com_github_jmorganca_ollama//api",
         "@com_github_olekukonko_tablewriter//:tablewriter",
     ],
 )
@@ -16,4 +21,10 @@ go_binary(
     name = "codenames-go",
     embed = [":codenames-go_lib"],
     visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "codenames-go_test",
+    srcs = ["codenames_test.go"],
+    embed = [":codenames-go_lib"],
 )
