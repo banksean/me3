@@ -28,4 +28,5 @@ go_test(
     name = "codenames-go_test",
     srcs = ["codenames_test.go"],
     embed = [":codenames-go_lib"],
+    deps = ["@org_bitbucket_creachadair_stringset//:stringset"],
 )
