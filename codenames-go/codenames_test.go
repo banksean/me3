@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"testing"
+
+	"bitbucket.org/creachadair/stringset"
 )
 
 func newTestGameBoard() *gameBoard {
@@ -10,31 +12,32 @@ func newTestGameBoard() *gameBoard {
 	for i := 0; i < 25; i++ {
 		deck = append(deck, fmt.Sprintf("word-%d", i))
 	}
+	guessed := stringset.New()
 	game := &gameBoard{
-		cards: map[string]map[string]any{
+		cards: map[string]*stringset.Set{
 			RED:       {},
 			BLUE:      {},
 			BYSTANDER: {},
 			ASSASSIN:  {},
 		},
-		guessedWords: make(map[string]any),
+		guessedWords: &guessed,
 		teamForCard:  make(map[string]string),
 	}
 
 	for _, card := range deck[0:8] {
-		game.cards[RED][card] = nil
+		game.cards[RED].Add(card)
 	}
 
 	for _, card := range deck[8:17] {
-		game.cards[BLUE][card] = nil
+		game.cards[BLUE].Add(card)
 	}
 
 	for _, card := range deck[17:24] {
-		game.cards[BYSTANDER][card] = nil
+		game.cards[BYSTANDER].Add(card)
 	}
 
 	for _, card := range deck[24:] {
-		game.cards[ASSASSIN][card] = nil
+		game.cards[ASSASSIN].Add(card)
 	}
 
 	return game

@@ -28,8 +28,8 @@ var (
 )
 
 type gameBoard struct {
-	cards        map[string]stringset.Set
-	guessedWords stringset.Set
+	cards        map[string]*stringset.Set
+	guessedWords *stringset.Set
 	teamForCard  map[string]string
 	rl           *readline.Instance
 	state        gameState
@@ -62,14 +62,15 @@ func (g *gameBoard) WriteTable(w io.Writer, spyMasterView bool) {
 	tw.SetRowLine(true)
 	allCards := []string{}
 	for _, cards := range g.cards {
-		for c := range cards {
+		for c := range *cards {
 			allCards = append(allCards, c)
 		}
 	}
 	sort.Strings(allCards)
 	allColors := []tablewriter.Colors{}
 	for i, c := range allCards {
-		if _, guessed := g.guessedWords[c]; guessed || spyMasterView {
+		guessed := g.guessedWords.Contains(c)
+		if guessed || spyMasterView {
 			team := g.teamForCard[c]
 			allColors = append(allColors, teamColor[team])
 			if guessed {
@@ -91,9 +92,9 @@ func (g *gameBoard) WriteTable(w io.Writer, spyMasterView bool) {
 
 func (g *gameBoard) currentScore() map[string]int {
 	ret := map[string]int{}
-	for w := range g.guessedWords {
+	for w := range *g.guessedWords {
 		for team, teamCards := range g.cards {
-			if _, ok := teamCards[w]; ok {
+			if teamCards.Contains(w) {
 				ret[team]++
 			}
 		}
@@ -102,19 +103,19 @@ func (g *gameBoard) currentScore() map[string]int {
 }
 
 func (g *gameBoard) guess(word string) (string, error) {
-	if _, ok := g.guessedWords[word]; ok {
+	if g.guessedWords.Contains(word) {
 		return "", fmt.Errorf("already guessed %q", word)
 	}
 	g.guessedWords.Add(word)
 	for t, c := range g.cards {
-		if _, ok := c[word]; ok {
+		if c.Contains(word) {
 			return t, nil
 		}
 	}
 	return "", fmt.Errorf("%q is not one of the cards currently in play", word)
 }
 
-func draw(d []string, n int) (stringset.Set, []string) {
+func draw(d []string, n int) (*stringset.Set, []string) {
 	ret := stringset.New()
 	for i := 0; i < n; i++ {
 		idx := rand.Intn(len(d))
@@ -122,7 +123,7 @@ func draw(d []string, n int) (stringset.Set, []string) {
 		d = append(d[:idx], d[idx+1:]...)
 	}
 
-	return ret, d
+	return &ret, d
 }
 
 func filterInput(r rune) (rune, bool) {
@@ -135,9 +136,10 @@ func filterInput(r rune) (rune, bool) {
 }
 
 func NewGameBoard(d []string) *gameBoard {
+	guessed := stringset.New()
 	game := &gameBoard{
-		cards:        make(map[string]stringset.Set),
-		guessedWords: stringset.New(),
+		cards:        make(map[string]*stringset.Set),
+		guessedWords: &guessed,
 		teamForCard:  make(map[string]string),
 	}
 	game.cards[RED], d = draw(d, 8)
@@ -145,7 +147,7 @@ func NewGameBoard(d []string) *gameBoard {
 	game.cards[BYSTANDER], d = draw(d, 7)
 	game.cards[ASSASSIN], _ = draw(d, 1)
 	for team, cards := range game.cards {
-		for card := range cards {
+		for _, card := range cards.Elements() {
 			game.teamForCard[card] = team
 		}
 	}
@@ -215,7 +217,7 @@ func main() {
 		s := game.currentScore()
 		winner := ""
 		for team, score := range s {
-			if len(game.cards[team]) == score {
+			if len(*game.cards[team]) == score {
 				winner = team
 			}
 		}

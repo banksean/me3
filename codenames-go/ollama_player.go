@@ -34,7 +34,7 @@ func NewOLllamaSpyMaster(game *gameBoard, team string) *OLlamaSpyMasterTurn {
 
 func (s *OLlamaSpyMasterTurn) PromptInput() (string, error) {
 	ourRemainingWords := s.game.cards[s.team].Clone()
-	ourRemainingWords.Remove(s.game.guessedWords)
+	ourRemainingWords.Remove(*s.game.guessedWords)
 
 	notOurWords := stringset.New()
 
@@ -42,8 +42,8 @@ func (s *OLlamaSpyMasterTurn) PromptInput() (string, error) {
 		if team == s.team {
 			continue
 		}
-		teamCards = teamCards.Clone()
-		teamCards.Remove(s.game.guessedWords)
+		teamCards := teamCards.Clone()
+		teamCards.Remove(*s.game.guessedWords)
 		notOurWords.Union(teamCards)
 	}
 

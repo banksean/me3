@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"bitbucket.org/creachadair/stringset"
 )
 
 type HumanSpyMasterTurn struct {
@@ -13,23 +15,18 @@ type HumanSpyMasterTurn struct {
 
 func (s *HumanSpyMasterTurn) PromptInput() (string, error) {
 	s.game.WriteTable(os.Stdout, true)
+	ourRemainingWords := s.game.cards[s.team].Clone()
+	ourRemainingWords.Remove(*s.game.guessedWords)
 
-	ourCards := s.game.cards[s.team]
+	notOurWords := stringset.New()
 
-	ourWords := []string{}
-	notOurWords := []string{}
-
-	for w := range ourCards {
-		ourWords = append(ourWords, w)
-	}
 	for team, teamCards := range s.game.cards {
 		if team == s.team {
 			continue
 		}
-
-		for w := range teamCards {
-			notOurWords = append(notOurWords, w)
-		}
+		teamCards := teamCards.Clone()
+		teamCards.Remove(*s.game.guessedWords)
+		notOurWords.Union(teamCards)
 	}
 
 	fmt.Printf(`%s team spymaster
@@ -42,7 +39,7 @@ Your clue must not be associated with any of the words in the following list:
 Respond only with the single word clue.  
 Do not provide any explanation for why you chose the single word clue.
 > `,
-		s.team, strings.Join(ourWords, ", "), strings.Join(notOurWords, ", "))
+		s.team, strings.Join(ourRemainingWords.Elements(), ", "), strings.Join(notOurWords.Elements(), ", "))
 
 	input, err := s.game.rl.Readline()
 
