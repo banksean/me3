@@ -11,12 +11,13 @@ import (
 )
 
 type OLlamaSpyMasterTurn struct {
-	game   *gameBoard
 	team   string
 	client *ollama.Client
 }
 
-func NewOLllamaSpyMaster(game *gameBoard, team string) *OLlamaSpyMasterTurn {
+var _ gameState = &OLlamaSpyMasterTurn{}
+
+func NewOLllamaSpyMaster(team string) *OLlamaSpyMasterTurn {
 	client, err := ollama.ClientFromEnvironment()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -25,25 +26,24 @@ func NewOLllamaSpyMaster(game *gameBoard, team string) *OLlamaSpyMasterTurn {
 
 	ret := &OLlamaSpyMasterTurn{
 		team:   team,
-		game:   game,
 		client: client,
 	}
 
 	return ret
 }
 
-func (s *OLlamaSpyMasterTurn) PromptInput() (string, error) {
-	ourRemainingWords := s.game.cards[s.team].Clone()
-	ourRemainingWords.Remove(*s.game.guessedWords)
+func (s *OLlamaSpyMasterTurn) PromptInput(game *gameBoard) (string, error) {
+	ourRemainingWords := game.cards[s.team].Clone()
+	ourRemainingWords.Remove(*game.guessedWords)
 
 	notOurWords := stringset.New()
 
-	for team, teamCards := range s.game.cards {
+	for team, teamCards := range game.cards {
 		if team == s.team {
 			continue
 		}
 		teamCards := teamCards.Clone()
-		teamCards.Remove(*s.game.guessedWords)
+		teamCards.Remove(*game.guessedWords)
 		notOurWords.Union(teamCards)
 	}
 
@@ -79,10 +79,10 @@ Do not provide any explanation for why you chose the single word clue.
 	return ret, nil
 }
 
-func (s *OLlamaSpyMasterTurn) ProcessInput(input string) error {
-	s.game.state = s.game.transitions[s.team+"CLUE"]
+func (s *OLlamaSpyMasterTurn) ProcessInput(game *gameBoard, input string) error {
+	game.state = game.transitions[s.team+"CLUE"]
 
-	fat := s.game.state.(*HumanFieldAgentTurn)
+	fat := game.state.(*HumanFieldAgentTurn)
 	fat.clue = input
 	return nil
 }

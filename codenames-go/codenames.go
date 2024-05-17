@@ -31,15 +31,14 @@ type gameBoard struct {
 	cards        map[string]*stringset.Set
 	guessedWords *stringset.Set
 	teamForCard  map[string]string
-	rl           *readline.Instance
 	state        gameState
 	transitions  map[string]gameState
 }
 
 // "State Machine" pattern.
 type gameState interface {
-	PromptInput() (string, error)
-	ProcessInput(string) error
+	PromptInput(*gameBoard) (string, error)
+	ProcessInput(*gameBoard, string) error
 }
 
 var (
@@ -152,24 +151,20 @@ func NewGameBoard(d []string) *gameBoard {
 		}
 	}
 
-	ollamaSpyMasterRed := NewOLllamaSpyMaster(game, RED)
-	ollamaSpyMasterBlue := NewOLllamaSpyMaster(game, BLUE)
+	ollamaSpyMasterRed := NewOLllamaSpyMaster(RED)
+	ollamaSpyMasterBlue := NewOLllamaSpyMaster(BLUE)
 
 	var redFieldAgent gameState = &HumanFieldAgentTurn{
 		team: RED,
-		game: game,
 	}
 	var redSpyMaster gameState = &HumanSpyMasterTurn{
 		team: RED,
-		game: game,
 	}
 	var blueFieldAgent gameState = &HumanFieldAgentTurn{
 		team: BLUE,
-		game: game,
 	}
 	var blueSpyMaster gameState = &HumanSpyMasterTurn{
 		team: BLUE,
-		game: game,
 	}
 
 	redSpyMaster = ollamaSpyMasterRed
@@ -186,9 +181,6 @@ func NewGameBoard(d []string) *gameBoard {
 }
 
 func main() {
-	words := strings.Split(wordlistFile, "\n")
-	game := NewGameBoard(words)
-
 	rl, err := readline.NewEx(
 		&readline.Config{
 			InterruptPrompt:     "^C",
@@ -201,14 +193,16 @@ func main() {
 		panic(err)
 	}
 	defer rl.Close()
-	game.rl = rl
+
+	words := strings.Split(wordlistFile, "\n")
+	game := NewGameBoard(words)
 
 	for {
-		line, err := game.state.PromptInput()
+		line, err := game.state.PromptInput(game)
 		if err != nil { // io.EOF
 			break
 		}
-		err = game.state.ProcessInput(strings.TrimSpace(line))
+		err = game.state.ProcessInput(game, strings.TrimSpace(line))
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 		}

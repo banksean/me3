@@ -5,27 +5,31 @@ import (
 	"os"
 	"strings"
 
+	"github.com/chzyer/readline"
+
 	"bitbucket.org/creachadair/stringset"
 )
 
 type HumanSpyMasterTurn struct {
-	game *gameBoard
 	team string
+	rl   *readline.Instance
 }
 
-func (s *HumanSpyMasterTurn) PromptInput() (string, error) {
-	s.game.WriteTable(os.Stdout, true)
-	ourRemainingWords := s.game.cards[s.team].Clone()
-	ourRemainingWords.Remove(*s.game.guessedWords)
+var _ gameState = &HumanSpyMasterTurn{}
+
+func (s *HumanSpyMasterTurn) PromptInput(game *gameBoard) (string, error) {
+	game.WriteTable(os.Stdout, true)
+	ourRemainingWords := game.cards[s.team].Clone()
+	ourRemainingWords.Remove(*game.guessedWords)
 
 	notOurWords := stringset.New()
 
-	for team, teamCards := range s.game.cards {
+	for team, teamCards := range game.cards {
 		if team == s.team {
 			continue
 		}
 		teamCards := teamCards.Clone()
-		teamCards.Remove(*s.game.guessedWords)
+		teamCards.Remove(*game.guessedWords)
 		notOurWords.Union(teamCards)
 	}
 
@@ -41,34 +45,36 @@ Do not provide any explanation for why you chose the single word clue.
 > `,
 		s.team, strings.Join(ourRemainingWords.Elements(), ", "), strings.Join(notOurWords.Elements(), ", "))
 
-	input, err := s.game.rl.Readline()
+	input, err := s.rl.Readline()
 
 	return input, err
 }
 
-func (s *HumanSpyMasterTurn) ProcessInput(input string) error {
-	s.game.state = s.game.transitions[s.team+"CLUE"]
-	fat := s.game.state.(*HumanFieldAgentTurn)
+func (s *HumanSpyMasterTurn) ProcessInput(game *gameBoard, input string) error {
+	game.state = game.transitions[s.team+"CLUE"]
+	fat := game.state.(*HumanFieldAgentTurn)
 	fat.clue = input
 	return nil
 }
 
 type HumanFieldAgentTurn struct {
-	game *gameBoard
 	team string
 	clue string
+	rl   *readline.Instance
 }
 
-func (s *HumanFieldAgentTurn) PromptInput() (string, error) {
-	s.game.WriteTable(os.Stdout, false)
+var _ gameState = &HumanFieldAgentTurn{}
+
+func (s *HumanFieldAgentTurn) PromptInput(game *gameBoard) (string, error) {
+	game.WriteTable(os.Stdout, false)
 
 	fmt.Printf("%s team field agent: make a guess for %q\n> ", s.team, s.clue)
-	input, err := s.game.rl.Readline()
+	input, err := s.rl.Readline()
 	return input, err
 }
 
-func (s *HumanFieldAgentTurn) ProcessInput(input string) error {
-	team, err := s.game.guess(input)
+func (s *HumanFieldAgentTurn) ProcessInput(game *gameBoard, input string) error {
+	team, err := game.guess(input)
 	if err != nil {
 		return err
 	}
@@ -78,7 +84,7 @@ func (s *HumanFieldAgentTurn) ProcessInput(input string) error {
 		fmt.Printf("\nINCORRECT ")
 	}
 	fmt.Printf("%q belongs to team %s\n\n", input, team)
-	s.game.state = s.game.transitions[s.team+"GUESS"]
+	game.state = game.transitions[s.team+"GUESS"]
 
 	return nil
 }
