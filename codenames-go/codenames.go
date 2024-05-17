@@ -50,24 +50,27 @@ type Player interface {
 	Move(*gameBoard) error
 }
 
+const GUESSED = "guessed-"
+
 var (
 	defaultColor = tablewriter.Colors{tablewriter.Normal, tablewriter.FgWhiteColor, tablewriter.BgBlackColor}
 	teamColor    = map[string]tablewriter.Colors{
-		RED:       {tablewriter.Bold, tablewriter.FgRedColor, tablewriter.BgBlackColor},
-		BLUE:      {tablewriter.Bold, tablewriter.FgBlueColor, tablewriter.BgBlackColor},
-		BYSTANDER: {tablewriter.Bold, tablewriter.FgWhiteColor, tablewriter.BgBlackColor},
-		ASSASSIN:  {tablewriter.Bold, tablewriter.FgYellowColor, tablewriter.BgBlackColor},
+		RED:                 {tablewriter.Normal, tablewriter.FgRedColor, tablewriter.BgBlackColor},
+		BLUE:                {tablewriter.Normal, tablewriter.FgBlueColor, tablewriter.BgBlackColor},
+		BYSTANDER:           {tablewriter.Normal, tablewriter.FgWhiteColor, tablewriter.BgBlackColor},
+		ASSASSIN:            {tablewriter.Normal, tablewriter.FgYellowColor, tablewriter.BgBlackColor},
+		RED + GUESSED:       {tablewriter.Normal, tablewriter.FgBlackColor, tablewriter.BgRedColor},
+		BLUE + GUESSED:      {tablewriter.Normal, tablewriter.FgBlackColor, tablewriter.BgBlueColor},
+		BYSTANDER + GUESSED: {tablewriter.Normal, tablewriter.FgBlackColor, tablewriter.BgWhiteColor},
+		ASSASSIN + GUESSED:  {tablewriter.Normal, tablewriter.FgBlackColor, tablewriter.BgYellowColor},
 	}
 )
 
 func (g *gameBoard) WriteTable(w io.Writer, spyMasterView bool) {
 	tw := tablewriter.NewWriter(w)
-	tw.SetBorder(false)
-	tw.SetBorders(tablewriter.Border{})
-	tw.SetCenterSeparator(" ")
-	tw.SetColumnSeparator(" ")
-	tw.SetRowSeparator(" ")
+	tw.SetBorder(true)
 	tw.SetRowLine(true)
+	tw.SetAlignment(tablewriter.ALIGN_CENTER)
 	allCards := []string{}
 	for _, cards := range g.cards {
 		for c := range *cards {
@@ -80,10 +83,14 @@ func (g *gameBoard) WriteTable(w io.Writer, spyMasterView bool) {
 		guessed := g.guessedWords.Contains(c)
 		if guessed || spyMasterView {
 			team := g.teamForCard[c]
-			allColors = append(allColors, teamColor[team])
+			color := teamColor[team]
+
 			if guessed {
 				allCards[i] = strings.ToUpper(c)
+				color = teamColor[team+GUESSED]
 			}
+			allColors = append(allColors, color)
+
 		} else {
 			allColors = append(allColors, defaultColor)
 		}
@@ -181,8 +188,10 @@ func main() {
 	words := strings.Split(wordlistFile, "\n")
 	game := NewGameBoard(words)
 
-	ollamaSpyMasterRed := NewOLllamaSpyMaster(RED)
+	//ollamaSpyMasterRed := NewOLllamaSpyMaster(RED)
 	ollamaSpyMasterBlue := NewOLllamaSpyMaster(BLUE)
+
+	ollamaFieldAgentRed := NewOLllamaOLlamaFieldAgent(RED)
 
 	var redFieldAgent Player = &HumanFieldAgentTurn{
 		team: RED,
@@ -201,7 +210,8 @@ func main() {
 		rl:   rl,
 	}
 
-	redSpyMaster = ollamaSpyMasterRed
+	//redSpyMaster = ollamaSpyMasterRed
+	redFieldAgent = ollamaFieldAgentRed
 	blueSpyMaster = ollamaSpyMasterBlue
 
 	game.transitions = map[string]Player{

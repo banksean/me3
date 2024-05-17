@@ -3,11 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/chzyer/readline"
-
-	"bitbucket.org/creachadair/stringset"
 )
 
 type HumanSpyMasterTurn struct {
@@ -27,31 +24,10 @@ func (s *HumanSpyMasterTurn) Move(game *gameBoard) error {
 
 func (s *HumanSpyMasterTurn) PromptInput(game *gameBoard) (string, error) {
 	game.WriteTable(os.Stdout, true)
-	ourRemainingWords := game.cards[s.team].Clone()
-	ourRemainingWords.Remove(*game.guessedWords)
 
-	notOurWords := stringset.New()
-
-	for team, teamCards := range game.cards {
-		if team == s.team {
-			continue
-		}
-		teamCards := teamCards.Clone()
-		teamCards.Remove(*game.guessedWords)
-		notOurWords.Union(teamCards)
-	}
-
-	fmt.Printf(`%s team spymaster
-Your task is to provide me with a single word clue to help me identify one of the words in the following list:
-	%s
-Your clue cannot be any of the words in that list.
-Your clue cannot be a slight variation of any of the words in that list.
-Your clue must not be associated with any of the words in the following list:
-	%s
-Respond only with the single word clue.  
-Do not provide any explanation for why you chose the single word clue.
+	fmt.Printf(`%s team spymaster, provide a clue for one of your words:
 > `,
-		s.team, strings.Join(ourRemainingWords.Elements(), ", "), strings.Join(notOurWords.Elements(), ", "))
+		s.team)
 
 	input, err := s.rl.Readline()
 
