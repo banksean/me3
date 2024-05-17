@@ -48,6 +48,7 @@ func (t *Team) Turn(g *gameBoard) error {
 // "State Machine" pattern.
 type Player interface {
 	Move(*gameBoard) error
+	Team() string
 }
 
 const GUESSED = "guessed-"
@@ -188,10 +189,11 @@ func main() {
 	words := strings.Split(wordlistFile, "\n")
 	game := NewGameBoard(words)
 
-	//ollamaSpyMasterRed := NewOLllamaSpyMaster(RED)
-	ollamaSpyMasterBlue := NewOLllamaSpyMaster(BLUE)
+	ollamaSpyMasterRed := NewOLllamaSpyMaster(RED, "llama3")
+	ollamaSpyMasterBlue := NewOLllamaSpyMaster(BLUE, "gemma")
 
-	ollamaFieldAgentRed := NewOLllamaOLlamaFieldAgent(RED)
+	ollamaFieldAgentRed := NewOLllamaOLlamaFieldAgent(RED, "llama3")
+	ollamaFieldAgentBlue := NewOLllamaOLlamaFieldAgent(BLUE, "gemma")
 
 	var redFieldAgent Player = &HumanFieldAgentTurn{
 		team: RED,
@@ -210,9 +212,10 @@ func main() {
 		rl:   rl,
 	}
 
-	//redSpyMaster = ollamaSpyMasterRed
+	redSpyMaster = ollamaSpyMasterRed
 	redFieldAgent = ollamaFieldAgentRed
 	blueSpyMaster = ollamaSpyMasterBlue
+	blueFieldAgent = ollamaFieldAgentBlue
 
 	game.transitions = map[string]Player{
 		RED + "CLUE":   redFieldAgent,
@@ -223,12 +226,6 @@ func main() {
 	game.state = redSpyMaster
 
 	for {
-		err = game.state.Move(game)
-		if err != nil {
-			fmt.Printf("error: %v\n", err)
-			break
-		}
-
 		// check for win conditions
 		s := game.currentScore()
 		winner := ""
@@ -238,9 +235,20 @@ func main() {
 			}
 		}
 
-		if winner != "" {
+		if winner == ASSASSIN {
+			// The turn will have moved on to the team who DIDN'T pick the assassin word,
+			// so they would be the winner.
+			winner = game.state.Team()
+		}
+		if winner == RED || winner == BLUE {
 			fmt.Printf("Winner is %s\nFinal scores:\n%v\n", winner, s)
 			os.Exit(0)
+		}
+
+		err = game.state.Move(game)
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+			break
 		}
 	}
 }

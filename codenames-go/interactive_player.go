@@ -14,6 +14,10 @@ type HumanSpyMasterTurn struct {
 
 var _ Player = &HumanSpyMasterTurn{}
 
+func (s *HumanSpyMasterTurn) Team() string {
+	return s.team
+}
+
 func (s *HumanSpyMasterTurn) Move(game *gameBoard) error {
 	game.WriteTable(os.Stdout, true)
 
@@ -37,6 +41,10 @@ type HumanFieldAgentTurn struct {
 }
 
 var _ Player = &HumanFieldAgentTurn{}
+
+func (s *HumanFieldAgentTurn) Team() string {
+	return s.team
+}
 
 func (s *HumanFieldAgentTurn) Move(game *gameBoard) error {
 	game.WriteTable(os.Stdout, false)
