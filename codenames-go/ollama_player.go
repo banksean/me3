@@ -39,6 +39,8 @@ func (s *OLlamaSpyMasterTurn) Team() string {
 }
 
 func (s *OLlamaSpyMasterTurn) Move(game *gameBoard) error {
+	game.WriteTable(os.Stdout, true)
+
 	ourRemainingWords := game.cards[s.team].Clone()
 	ourRemainingWords.Remove(*game.guessedWords)
 
@@ -50,19 +52,21 @@ func (s *OLlamaSpyMasterTurn) Move(game *gameBoard) error {
 		}
 		teamCards := teamCards.Clone()
 		teamCards.Remove(*game.guessedWords)
-		notOurWords.Union(teamCards)
+		notOurWords.Add(teamCards.Elements()...)
 	}
+	assassinWord := game.cards[ASSASSIN].Elements()[0]
 
 	prompt := fmt.Sprintf(`Your task is to provide me with a single word clue to help me identify one of the words in the following list:
 	[%s]
 Your clue cannot be any of the words in that list.
 Your clue cannot be a slight variation of any of the words in that list.
-Your clue must not be associated with any of the words in the following list:
+Your clue must NOT be associated with any of the words in the following list:
 	[%s]
+In particular, DO NOT offer a clue that might suggest the word %q, because you will cause us to lose the game.
 Respond only with the single word clue.  
 Do not provide any explanation for why you chose the single word clue.
 > `,
-		strings.Join(ourRemainingWords.Elements(), ", "), strings.Join(notOurWords.Elements(), ", "))
+		strings.Join(ourRemainingWords.Elements(), ", "), strings.Join(notOurWords.Elements(), ", "), assassinWord)
 
 	streaming := false
 	request := ollama.GenerateRequest{
@@ -128,14 +132,16 @@ func (s *OLlamaFieldAgentTurn) Move(game *gameBoard) error {
 		}
 		remainingWords.Remove(*game.guessedWords)
 		clue := game.clue[s.team]
-		prompt := fmt.Sprintf(`Your task is to identify one of the words in the following list:
+		prompt := fmt.Sprintf(`Based on the following clue: %s,
+Your task is to identify one of the words in the following list:
 	[%s]
-based on the following clue:
- %s
+Your guess MUST BE one and only one word from the above list.
+Do not guess a word that is not in that list.
+Your guess MUST NOT BE the word %q.
 Respond only with the single word, lowercase, with no punctuation.
+Do NOT respond with any text OTHER THAN THAT ONE WORD.
 > `,
-			strings.Join(remainingWords.Elements(), ", "), clue)
-		fmt.Printf("Field agent prompt: %q\n", prompt)
+			clue, strings.Join(remainingWords.Elements(), ", "), clue)
 
 		streaming := false
 		request := ollama.GenerateRequest{
