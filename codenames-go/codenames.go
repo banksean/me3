@@ -31,14 +31,23 @@ type gameBoard struct {
 	cards        map[string]*stringset.Set
 	guessedWords *stringset.Set
 	teamForCard  map[string]string
-	state        gameState
-	transitions  map[string]gameState
+	state        Player
+	transitions  map[string]Player
+	clue         map[string]string
+}
+
+type Team struct {
+	Name                  string
+	SpyMaster, FieldAgent Player
+}
+
+func (t *Team) Turn(g *gameBoard) error {
+	return nil
 }
 
 // "State Machine" pattern.
-type gameState interface {
-	PromptInput(*gameBoard) (string, error)
-	ProcessInput(*gameBoard, string) error
+type Player interface {
+	Move(*gameBoard) error
 }
 
 var (
@@ -140,6 +149,7 @@ func NewGameBoard(d []string) *gameBoard {
 		cards:        make(map[string]*stringset.Set),
 		guessedWords: &guessed,
 		teamForCard:  make(map[string]string),
+		clue:         map[string]string{},
 	}
 	game.cards[RED], d = draw(d, 8)
 	game.cards[BLUE], d = draw(d, 9)
@@ -151,32 +161,6 @@ func NewGameBoard(d []string) *gameBoard {
 		}
 	}
 
-	ollamaSpyMasterRed := NewOLllamaSpyMaster(RED)
-	ollamaSpyMasterBlue := NewOLllamaSpyMaster(BLUE)
-
-	var redFieldAgent gameState = &HumanFieldAgentTurn{
-		team: RED,
-	}
-	var redSpyMaster gameState = &HumanSpyMasterTurn{
-		team: RED,
-	}
-	var blueFieldAgent gameState = &HumanFieldAgentTurn{
-		team: BLUE,
-	}
-	var blueSpyMaster gameState = &HumanSpyMasterTurn{
-		team: BLUE,
-	}
-
-	redSpyMaster = ollamaSpyMasterRed
-	blueSpyMaster = ollamaSpyMasterBlue
-
-	game.transitions = map[string]gameState{
-		RED + "CLUE":   redFieldAgent,
-		RED + "GUESS":  blueSpyMaster,
-		BLUE + "CLUE":  blueFieldAgent,
-		BLUE + "GUESS": redSpyMaster,
-	}
-	game.state = redSpyMaster
 	return game
 }
 
@@ -197,14 +181,42 @@ func main() {
 	words := strings.Split(wordlistFile, "\n")
 	game := NewGameBoard(words)
 
+	ollamaSpyMasterRed := NewOLllamaSpyMaster(RED)
+	ollamaSpyMasterBlue := NewOLllamaSpyMaster(BLUE)
+
+	var redFieldAgent Player = &HumanFieldAgentTurn{
+		team: RED,
+		rl:   rl,
+	}
+	var redSpyMaster Player = &HumanSpyMasterTurn{
+		team: RED,
+		rl:   rl,
+	}
+	var blueFieldAgent Player = &HumanFieldAgentTurn{
+		team: BLUE,
+		rl:   rl,
+	}
+	var blueSpyMaster Player = &HumanSpyMasterTurn{
+		team: BLUE,
+		rl:   rl,
+	}
+
+	redSpyMaster = ollamaSpyMasterRed
+	blueSpyMaster = ollamaSpyMasterBlue
+
+	game.transitions = map[string]Player{
+		RED + "CLUE":   redFieldAgent,
+		RED + "GUESS":  blueSpyMaster,
+		BLUE + "CLUE":  blueFieldAgent,
+		BLUE + "GUESS": redSpyMaster,
+	}
+	game.state = redSpyMaster
+
 	for {
-		line, err := game.state.PromptInput(game)
-		if err != nil { // io.EOF
-			break
-		}
-		err = game.state.ProcessInput(game, strings.TrimSpace(line))
+		err = game.state.Move(game)
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
+			break
 		}
 
 		// check for win conditions

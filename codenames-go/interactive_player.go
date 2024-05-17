@@ -15,7 +15,15 @@ type HumanSpyMasterTurn struct {
 	rl   *readline.Instance
 }
 
-var _ gameState = &HumanSpyMasterTurn{}
+var _ Player = &HumanSpyMasterTurn{}
+
+func (s *HumanSpyMasterTurn) Move(game *gameBoard) error {
+	input, err := s.PromptInput(game)
+	if err != nil {
+		return err
+	}
+	return s.ProcessInput(game, input)
+}
 
 func (s *HumanSpyMasterTurn) PromptInput(game *gameBoard) (string, error) {
 	game.WriteTable(os.Stdout, true)
@@ -52,23 +60,29 @@ Do not provide any explanation for why you chose the single word clue.
 
 func (s *HumanSpyMasterTurn) ProcessInput(game *gameBoard, input string) error {
 	game.state = game.transitions[s.team+"CLUE"]
-	fat := game.state.(*HumanFieldAgentTurn)
-	fat.clue = input
+	game.clue[s.team] = input
 	return nil
 }
 
 type HumanFieldAgentTurn struct {
 	team string
-	clue string
 	rl   *readline.Instance
 }
 
-var _ gameState = &HumanFieldAgentTurn{}
+var _ Player = &HumanFieldAgentTurn{}
+
+func (s *HumanFieldAgentTurn) Move(game *gameBoard) error {
+	input, err := s.PromptInput(game)
+	if err != nil {
+		return err
+	}
+	return s.ProcessInput(game, input)
+}
 
 func (s *HumanFieldAgentTurn) PromptInput(game *gameBoard) (string, error) {
 	game.WriteTable(os.Stdout, false)
-
-	fmt.Printf("%s team field agent: make a guess for %q\n> ", s.team, s.clue)
+	clue := game.clue[s.team]
+	fmt.Printf("%s team field agent: make a guess for %q\n> ", s.team, clue)
 	input, err := s.rl.Readline()
 	return input, err
 }
