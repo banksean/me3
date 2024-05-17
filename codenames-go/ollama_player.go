@@ -33,14 +33,6 @@ func NewOLllamaSpyMaster(team string) *OLlamaSpyMasterTurn {
 }
 
 func (s *OLlamaSpyMasterTurn) Move(game *gameBoard) error {
-	input, err := s.PromptInput(game)
-	if err != nil {
-		return err
-	}
-	return s.ProcessInput(game, input)
-}
-
-func (s *OLlamaSpyMasterTurn) PromptInput(game *gameBoard) (string, error) {
 	ourRemainingWords := game.cards[s.team].Clone()
 	ourRemainingWords.Remove(*game.guessedWords)
 
@@ -74,20 +66,17 @@ Do not provide any explanation for why you chose the single word clue.
 		Context: []int{},
 		Stream:  &streaming,
 	}
-	ret := ""
+	input := ""
 	fn := func(response ollama.GenerateResponse) error {
-		ret += response.Response
+		input += response.Response
 		return nil
 	}
 	ctx := context.Background()
-	if err := s.client.Generate(ctx, &request, fn); err != nil {
-		return err.Error(), err
+	err := s.client.Generate(ctx, &request, fn)
+	if err != nil {
+		return err
 	}
 
-	return ret, nil
-}
-
-func (s *OLlamaSpyMasterTurn) ProcessInput(game *gameBoard, input string) error {
 	game.state = game.transitions[s.team+"CLUE"]
 
 	game.clue[s.team] = input
@@ -117,15 +106,6 @@ func NewOLllamaOLlamaFieldAgent(team string) *OLlamaFieldAgentTurn {
 }
 
 func (s *OLlamaFieldAgentTurn) Move(game *gameBoard) error {
-	input, err := s.PromptInput(game)
-	if err != nil {
-		return err
-	}
-	return s.ProcessInput(game, input)
-}
-
-func (s *OLlamaFieldAgentTurn) PromptInput(game *gameBoard) (string, error) {
-
 	remainingWords := stringset.New()
 	for _, cards := range game.cards {
 		remainingWords.Add(cards.Elements()...)
@@ -148,20 +128,17 @@ Respond only with the single word, lowercase, with no punctuation.
 		Context: []int{},
 		Stream:  &streaming,
 	}
-	ret := ""
+	input := ""
 	fn := func(response ollama.GenerateResponse) error {
-		ret += response.Response
+		input += response.Response
 		return nil
 	}
 	ctx := context.Background()
-	if err := s.client.Generate(ctx, &request, fn); err != nil {
-		return err.Error(), err
+	err := s.client.Generate(ctx, &request, fn)
+	if err != nil {
+		return err
 	}
-	fmt.Printf("%s team guessed %q based on the clue %q\n", s.team, ret, clue)
-	return ret, nil
-}
-
-func (s *OLlamaFieldAgentTurn) ProcessInput(game *gameBoard, input string) error {
+	fmt.Printf("%s team guessed %q based on the clue %q\n", s.team, input, clue)
 	team, err := game.guess(input)
 	if err != nil {
 		return err
@@ -173,6 +150,5 @@ func (s *OLlamaFieldAgentTurn) ProcessInput(game *gameBoard, input string) error
 	}
 	fmt.Printf("%q belongs to team %s\n\n", input, team)
 	game.state = game.transitions[s.team+"GUESS"]
-
 	return nil
 }

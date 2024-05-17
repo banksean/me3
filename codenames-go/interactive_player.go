@@ -15,14 +15,6 @@ type HumanSpyMasterTurn struct {
 var _ Player = &HumanSpyMasterTurn{}
 
 func (s *HumanSpyMasterTurn) Move(game *gameBoard) error {
-	input, err := s.PromptInput(game)
-	if err != nil {
-		return err
-	}
-	return s.ProcessInput(game, input)
-}
-
-func (s *HumanSpyMasterTurn) PromptInput(game *gameBoard) (string, error) {
 	game.WriteTable(os.Stdout, true)
 
 	fmt.Printf(`%s team spymaster, provide a clue for one of your words:
@@ -30,11 +22,10 @@ func (s *HumanSpyMasterTurn) PromptInput(game *gameBoard) (string, error) {
 		s.team)
 
 	input, err := s.rl.Readline()
+	if err != nil {
+		return err
+	}
 
-	return input, err
-}
-
-func (s *HumanSpyMasterTurn) ProcessInput(game *gameBoard, input string) error {
 	game.state = game.transitions[s.team+"CLUE"]
 	game.clue[s.team] = input
 	return nil
@@ -48,22 +39,14 @@ type HumanFieldAgentTurn struct {
 var _ Player = &HumanFieldAgentTurn{}
 
 func (s *HumanFieldAgentTurn) Move(game *gameBoard) error {
-	input, err := s.PromptInput(game)
-	if err != nil {
-		return err
-	}
-	return s.ProcessInput(game, input)
-}
-
-func (s *HumanFieldAgentTurn) PromptInput(game *gameBoard) (string, error) {
 	game.WriteTable(os.Stdout, false)
 	clue := game.clue[s.team]
 	fmt.Printf("%s team field agent: make a guess for %q\n> ", s.team, clue)
 	input, err := s.rl.Readline()
-	return input, err
-}
 
-func (s *HumanFieldAgentTurn) ProcessInput(game *gameBoard, input string) error {
+	if err != nil {
+		return err
+	}
 	team, err := game.guess(input)
 	if err != nil {
 		return err
