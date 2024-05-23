@@ -53,3 +53,15 @@ compile_pip_requirements(
     src = "requirements.in",
     requirements_txt = "requirements.txt",
 )
+
+
+#######
+# npm #
+#######
+
+# Sample usage: "bazel run //:npm -- install some-package"
+alias(
+    name = "npm",
+    actual = "//bazel/tools/npm",
+    visibility = ["//visibility:public"],
+)
