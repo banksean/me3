@@ -25,3 +25,5 @@ go.work
 *.pyc
 # Files open in vi.
 *.swp
+
+node_modules/
