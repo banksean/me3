@@ -1,10 +1,11 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
-    name="transpile",
-    transpiler = "tsc",
+    name = "transpile",
     srcs = ["index.ts"],
-    tsconfig= "//:ts_config",
-    allow_js=True,
-    resolve_json_module=True
+    allow_js = True,
+    declaration = True,
+    resolve_json_module = True,
+    transpiler = "tsc",
+    tsconfig = "//:ts_config",
 )
