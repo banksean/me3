@@ -29,6 +29,7 @@ ts_project(
         ":src_ts",
         "//:node_modules/@jest/globals",
         "//:node_modules/@types/jest",
+        "//:node_modules/@types/node",
     ],
 )
 
