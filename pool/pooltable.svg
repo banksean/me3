@@ -170,12 +170,12 @@
     <rect class="edges" id="cushion" x="12px"  y="12px" width="208px" height="408px"></rect>
 
     <g id="pocket-outlines">
-      <circle class="pocket"  cx="16px"id="circle1" cy="16px"></circle>
-      <circle class="pocket"  cx="216px"id="circle2" cy="16px"></circle>
-      <circle class="pocket"  cx="216px"id="circle3" cy="416px"></circle>
-      <circle class="pocket"  cx="16px"id="circle4" cy="416px"></circle>
-      <circle class="pocket"  cx="216px"id="circle5" cy="216px"></circle>
-      <circle class="pocket" id="circle6" cy="216px" cx="16px"></circle>
+      <circle class="pocket"  cx="16px" cy="16px"></circle>
+      <circle class="pocket"  cx="216px" cy="16px"></circle>
+      <circle class="pocket"  cx="216px" cy="416px"></circle>
+      <circle class="pocket"  cx="16px" cy="416px"></circle>
+      <circle class="pocket"  cx="216px" cy="216px"></circle>
+      <circle class="pocket"  cy="216px" cx="16px"></circle>
     </g>
     <g id="diamonds">
       <circle class="diamond top" cx="66px"></circle>
