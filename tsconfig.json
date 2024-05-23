@@ -5,12 +5,12 @@
     "module": "commonjs",
     "lib": ["DOM", "ES2017"],
     "noImplicitAny": true,
-    "inlineSourceMap": true,
     "inlineSources": true,
     "strict": true,
     "target": "es2017",
     "resolveJsonModule": true,
-    "declaration": true
+    "declaration": true,
+    "sourceMap": true,
   },
   "exclude": [
     // Exclude the //_bazel_* symlinks. This Prevents the following VSCode error:

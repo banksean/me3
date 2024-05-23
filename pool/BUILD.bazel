@@ -1,22 +1,42 @@
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_rules_jest//jest:defs.bzl", "jest_test")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
-    name = "transpile",
-    srcs = ["index.ts"],
+    name = "src_ts",
+    srcs = [
+        "index.ts",
+    ],
     allow_js = True,
     declaration = True,
     resolve_json_module = True,
+    source_map = True,
     transpiler = "tsc",
     tsconfig = "//:ts_config",
 )
 
-jest_test(
-    name = "test",
-    node_modules = "//:node_modules",
-    config = "jest.config.js",
-    data = [
-        "index.ts", # the test file below depends on this file
+ts_project(
+    name = "src_test_ts",
+    srcs = [
         "index.test.ts",
     ],
+    allow_js = True,
+    declaration = True,
+    resolve_json_module = True,
+    source_map = True,
+    transpiler = "tsc",
+    tsconfig = "//:ts_config",
+    deps = [
+        ":src_ts",
+        "//:node_modules/@jest/globals",
+        "//:node_modules/@types/jest",
+    ],
+)
+
+jest_test(
+    name = "test",
+    config = "jest.config.js",
+    data = [
+        ":src_test_ts",
+    ],
+    node_modules = "//:node_modules",
 )

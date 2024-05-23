@@ -1,4 +1,5 @@
-let { adder, concatenate } = require('index.ts');
+import {describe, expect, test} from '@jest/globals';
+import { adder, concatenate }  from './index';
 
 describe('adder module', () => {
     test('test_adder', ()=> {
