@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://web.resource.org/cc/" 
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" 
+height="900px" style="zoom: 2;" cursor="default" id="svg_document" width="300px" baseProfile="full" version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 300 1050">
+
+<title id="svg_document_title">Untitled.svg</title><defs id="svg_document_defs"></defs>
+<style>
+#table-container-color {
+  --felt-color: #14632c;
+  --cushion-color:  #0d3d1b;
+  --diamond-color: #545454;
+  --gridline-color: #024106;
+  --outer-rail-color: #471c00;
+  --pocket-radius: 8px;
+}
+
+#table-container {
+  --felt-color: #ffffff;
+  --cushion-color:  #5c5c5c;
+  --diamond-color: #000000;
+  --gridline-color: #cbcbcb;
+  --outer-rail-color: #b0b0b0;
+  --pocket-radius: 8px;
+}
+
+#outer {
+  fill: var(--outer-rail-color)
+}
+
+#pocket-outlines .pocket {
+  stroke-width: 4px;
+  stroke: var(--cushion-color);
+  r: calc(var(--pocket-radius) + 2px);
+}
+#pocket-holes .pocket {
+  fill:black;
+  r: var(--pocket-radius);
+}
+#cushion {
+  fill: var(--cushion-color);
+}
+.felt {
+  fill: var(--felt-color);
+}
+.diamond {
+  fill:  var(--diamond-color);
+  r: 1px;
+}
+.diamond.major {
+  r: 2px;
+}
+.diamond.top {
+  cy: 6px;
+}
+.diamond.bottom {
+  cy: 426px;
+}
+.diamond.left {
+  cx: 6px;
+}
+.diamond.right {
+  cx: 226px;
+}
+#gridlines line {
+  stroke-width:0.5px;
+  stroke: var(--gridline-color);
+}
+#gridlines .major {
+  stroke-width: 1px;
+}
+
+</style>
+<g id="table-container">
+  <g id="rails">
+    <rect class="edges"  id="outer" x="0px" rx="16px" y="0px" width="232px" visibility="visible" height="432px"></rect>
+    <rect class="edges" id="cushion" stroke-width="1px" x="12px"  y="12px" width="208px" fill="#14632c" visibility="visible" height="408px"></rect>
+    <g id="diamonds">
+      <circle class="diamond top" cx="66px"></circle>
+      <circle class="diamond top major" cx="116px"></circle>
+      <circle class="diamond top" cx="166px"></circle>
+
+      <circle class="diamond bottom" cx="66px"></circle>
+      <circle class="diamond bottom major" cx="116px"></circle>
+      <circle class="diamond bottom" cx="166px"></circle>
+
+      <circle class="diamond left" cy="66px"></circle>
+      <circle class="diamond left major" cy="116px"></circle>
+      <circle class="diamond left" cy="166px"></circle>
+
+      <circle class="diamond left" cy="266px"></circle>
+      <circle class="diamond left major" cy="316px"></circle>
+      <circle class="diamond left" cy="366px"></circle>
+
+      <circle class="diamond right" cy="66px"></circle>
+      <circle class="diamond right major" cy="116px"></circle>
+      <circle class="diamond right" cy="166px"></circle>
+
+      <circle class="diamond right" cy="266px"></circle>
+      <circle class="diamond right major" cy="316px"></circle>
+      <circle class="diamond right" cy="366px"></circle>
+
+    </g>
+  </g>
+
+  <g id="pocket-outlines">
+    <circle class="pocket"  cx="16px"id="circle1" cy="16px"></circle>
+    <circle class="pocket"  cx="216px"id="circle2" cy="16px"></circle>
+    <circle class="pocket"  cx="216px"id="circle3" cy="416px"></circle>
+    <circle class="pocket"  cx="16px"id="circle4" cy="416px"></circle>
+    <circle class="pocket"  cx="216px"id="circle5" cy="216px"></circle>
+    <circle class="pocket" id="circle6" cy="216px" cx="16px"></circle>
+  </g>
+
+  <g id="felt">
+    <rect class="felt"  x="16px" height="400px" y="16px" id="rect1" width="200px"></rect>
+  </g>
+
+  <g id="gridlines">
+    <line x1="66" y1="16" x2="66" y2="416"/>
+    <line class="major" x1="116" y1="16" x2="116" y2="416"/>
+    <line x1="166" y1="16" x2="166" y2="416"/>
+
+    <line x1="16" y1="66" x2="216" y2="66"/>
+    <line class="major" x1="16" y1="116" x2="216" y2="116"/>
+    <line x1="16" y1="166" x2="216" y2="166"/>
+
+    <line class="major" x1="16" y1="216" x2="216" y2="216"/>
+
+    <line x1="16" y1="266" x2="216" y2="266"/>
+    <line class="major" x1="16" y1="316" x2="216" y2="316"/>
+    <line x1="16" y1="366" x2="216" y2="366"/>
+  </g>
+
+  <g id="pocket-holes">
+    <circle class="pocket"  cx="16px"id="circle1" cy="16px"></circle>
+    <circle class="pocket"  cx="216px"id="circle2" cy="16px" ></circle>
+    <circle class="pocket"  cx="216px"id="circle3" cy="416px"></circle>
+    <circle class="pocket"  cx="16px"id="circle4" cy="416px" ></circle>
+    <circle class="pocket"  cx="216px"id="circle5" cy="216px"></circle>
+    <circle class="pocket" id="circle6" cy="216px" cx="16px"></circle>
+  </g>
+
+</g>
+</svg>
