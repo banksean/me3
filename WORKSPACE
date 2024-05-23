@@ -160,3 +160,28 @@ load("@aspect_bazel_lib//lib:repositories.bzl", "register_copy_directory_toolcha
 register_copy_directory_toolchains()
 
 register_copy_to_directory_toolchains()
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+http_archive(
+    name = "aspect_rules_jest",
+    sha256 = "af34029aaf1700079a287afe1e084a154027ba2227502b383d8200ce6987bccc",
+    strip_prefix = "rules_jest-0.22.0-rc0",
+    url = "https://github.com/aspect-build/rules_jest/releases/download/v0.22.0-rc0/rules_jest-v0.22.0-rc0.tar.gz",
+)
+
+####################
+# aspect_rules_jest setup #
+####################
+# Fetches the aspect_rules_jest dependencies.
+# If you want to have a different version of some dependency,
+# you should fetch it *before* calling this.
+# Alternatively, you can skip calling this function, so long as you've
+# already fetched all the dependencies.
+
+load("@aspect_rules_jest//jest:dependencies.bzl", "rules_jest_dependencies")
+
+rules_jest_dependencies()
+
+load("@aspect_rules_js//js:toolchains.bzl", "DEFAULT_NODE_VERSION", "rules_js_register_toolchains")
+
+rules_js_register_toolchains(node_version = DEFAULT_NODE_VERSION)

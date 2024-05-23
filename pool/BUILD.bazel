@@ -1,4 +1,5 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_jest//jest:defs.bzl", "jest_test")
 
 ts_project(
     name = "transpile",
@@ -8,4 +9,14 @@ ts_project(
     resolve_json_module = True,
     transpiler = "tsc",
     tsconfig = "//:ts_config",
+)
+
+jest_test(
+    name = "test",
+    node_modules = "//:node_modules",
+    config = "jest.config.js",
+    data = [
+        "index.ts", # the test file below depends on this file
+        "index.test.ts",
+    ],
 )
