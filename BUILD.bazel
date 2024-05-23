@@ -67,6 +67,17 @@ alias(
     visibility = ["//visibility:public"],
 )
 
+#######
+# npx #
+#######
+
+# Sample usage: "bazel run //:npx -- eslint --fix ."
+alias(
+    name = "npx",
+    actual = "//bazel/tools/npx",
+    visibility = ["//visibility:public"],
+)
+
 # Global tsconfig.json file.
 ts_config(
     name = "ts_config",
