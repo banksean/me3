@@ -1,0 +1,14 @@
+{
+  "name": "me3",
+  "version": "1.0.0",
+  "description": "See [ABOUT.md](./ABOUT.md) for background information, why this repo exists, why it's set up this way, etc.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "5.4.5"
+  }
+}
