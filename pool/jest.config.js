@@ -1,7 +1,7 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
-  testEnvironment: 'node',
+  testEnvironment: "node",
   haste: {
     enableSymlinks: true,
-  }
+  },
 };

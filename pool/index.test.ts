@@ -1,14 +1,16 @@
-import {describe, expect, test} from '@jest/globals';
-import { adder, concatenate }  from './index';
+import { describe, expect, test } from "@jest/globals";
+import { adder, concatenate } from "./index";
 
-describe('adder module', () => {
-    test('test_adder', ()=> {
-        expect(adder(1,2)).toBe(3)
-    });
+describe("adder module", () => {
+  test("test_adder", () => {
+    expect(adder(1, 2)).toBe(3);
+  });
 });
 
-describe('concatenate module', () => {
-    test('test_concatenate', ()=> {
-        expect(concatenate('mary',' had a little lamb')).toBe('mary had a little lamb')
-    });
+describe("concatenate module", () => {
+  test("test_concatenate", () => {
+    expect(concatenate("mary", " had a little lamb")).toBe(
+      "mary had a little lamb",
+    );
+  });
 });

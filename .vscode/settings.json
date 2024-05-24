@@ -1,7 +1,7 @@
 {
   "python.analysis.extraPaths": [
     "${workspaceFolder}/bazel-me3/external/pip_deps_gensim/site-packages",
-    "${workspaceFolder}/bazel-me3/external/pip_deps_nltk/site-packages",
-    ],
-    "svg.preview.background": "dark-transparent"
+    "${workspaceFolder}/bazel-me3/external/pip_deps_nltk/site-packages"
+  ],
+  "svg.preview.background": "dark-transparent"
 }
