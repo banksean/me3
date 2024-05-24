@@ -41,7 +41,7 @@ run this form:
 
 Doing so will make sure your `go` command is use the same toolchain and environment that `bazel` does when it deals with your go targets.
 
-### Add a new external go package dependency
+### Manage go package dependencies
 This is a little more complicated than it might be in a purely go-based project repo, but it's still pretty straightforward:
 
 Suppose you want to use an external go package. We'll use `github.com/urfave/cli/v2` as an example:
@@ -52,7 +52,14 @@ Suppose you want to use an external go package. We'll use `github.com/urfave/cli
 
 Note that `bazel build` does not actually look at the contents of `go.mod` - it uses `go_dependencies.bzl`, which `make gazelle` generates from `go.mod`.
 
-### Add a new external python package dependency
+### Manage NPM package dependencies
+Use `bazel run @pnpm` instead of `npm`, e.g.:
+
+```
+bazel run @pnpm -- install <package name> [options...]
+```
+
+### Manage python package dependencies
 
 Edit `requirements.in` (NOT `requirements.txt`) to reflect your updated *direct* dependencies - packages your code actually imports, directly, by name.
 
