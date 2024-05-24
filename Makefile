@@ -33,9 +33,9 @@ update-py-deps:
 buildifier:
 	$(BAZEL) run //:buildifier
 
-.PHONY: gofmt
-gofmt:
-	$(BAZEL) run //:gofmt -- -s -w .
+.PHONY: format
+format:
+	$(BAZEL) run //:format
 
 .PHONY: gencommitmsg
 gencommitmsg:
