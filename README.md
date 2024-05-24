@@ -53,10 +53,15 @@ Suppose you want to use an external go package. We'll use `github.com/urfave/cli
 Note that `bazel build` does not actually look at the contents of `go.mod` - it uses `go_dependencies.bzl`, which `make gazelle` generates from `go.mod`.
 
 ### Manage NPM package dependencies
-Use `bazel run @pnpm` instead of `npm`, e.g.:
+Use `bazel run @pnpm` instead of `npm`:
 
 ```
-bazel run @pnpm -- install <package name> [options...]
+bazel run @pnpm -- install --dir $(pwd) <package name> [options...]
+```
+
+e.g.:
+```
+bazel run @pnpm --  install --dir $(pwd) -D prettier -w 
 ```
 
 ### Manage python package dependencies

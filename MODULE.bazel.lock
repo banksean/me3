@@ -2679,7 +2679,7 @@
         "bzlTransitiveDigest": "uU5NbR9ZkjUfz3olJUMFrMKjhg6CL7waF2Q3c9oNs4E=",
         "accumulatedFileDigests": {
           "@@//:.npmrc": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "@@//:pnpm-lock.yaml": "d83109ae212108ac3efd8d1fb76b1338c6547716dd69e858b42c6c57b3929bd9",
+          "@@//:pnpm-lock.yaml": "0f0b4bce3c5e5a2eb6e3761dab1d41805f3d8c5c36d8de56a3d71b686fa14aac",
           "@@aspect_bazel_lib~2.7.6~toolchains~yq_darwin_arm64//:yq": "db8c11ca4c1dda8fe7c211e82e28191d48bd9ae83471b952003e819de79bcb51"
         },
         "envVariables": {},
@@ -16232,6 +16232,37 @@
               "transitive_closure": {
                 "istanbul-lib-coverage": [
                   "3.2.2"
+                ]
+              },
+              "lifecycle_build_target": false,
+              "lifecycle_hooks_env": [],
+              "lifecycle_hooks_execution_requirements": [],
+              "lifecycle_hooks_use_default_shell_env": false,
+              "bins": {},
+              "package_visibility": [
+                "//visibility:public"
+              ],
+              "replace_package": ""
+            }
+          },
+          "npm__prettier__3.2.5__links": {
+            "bzlFile": "@@aspect_rules_js~2.0.0-rc1//npm/private:npm_import.bzl",
+            "ruleClassName": "npm_import_links",
+            "attributes": {
+              "name": "aspect_rules_js~2.0.0-rc1~npm~npm__prettier__3.2.5__links",
+              "package": "prettier",
+              "version": "3.2.5",
+              "dev": true,
+              "root_package": "",
+              "link_packages": {
+                "": [
+                  "prettier"
+                ]
+              },
+              "deps": {},
+              "transitive_closure": {
+                "prettier": [
+                  "3.2.5"
                 ]
               },
               "lifecycle_build_target": false,
@@ -33838,6 +33869,36 @@
               "link_packages": {},
               "integrity": "sha512-y10wOWt8yZpqXmOgRo77WaHEmhYQYGNA6y421PKsKYWEK8aW+cqAphborZDhqfyKrbZEN92CN1X2KbafY2s7Yw==",
               "url": "https://registry.npmjs.org/node-releases/-/node-releases-2.0.14.tgz",
+              "commit": "",
+              "patch_args": [],
+              "patches": [],
+              "custom_postinstall": "",
+              "npm_auth": "",
+              "npm_auth_basic": "",
+              "npm_auth_username": "",
+              "npm_auth_password": "",
+              "lifecycle_hooks": [],
+              "extra_build_content": "",
+              "generate_bzl_library_targets": false,
+              "extract_full_archive": false
+            }
+          },
+          "npm__prettier__3.2.5": {
+            "bzlFile": "@@aspect_rules_js~2.0.0-rc1//npm/private:npm_import.bzl",
+            "ruleClassName": "npm_import_rule",
+            "attributes": {
+              "name": "aspect_rules_js~2.0.0-rc1~npm~npm__prettier__3.2.5",
+              "package": "prettier",
+              "version": "3.2.5",
+              "root_package": "",
+              "link_workspace": "",
+              "link_packages": {
+                "": [
+                  "prettier"
+                ]
+              },
+              "integrity": "sha512-3/GWa9aOC0YeD7LUfvOG2NiDyhOWRvt1k+rcKhOuYnMY24iiCphgneUfJDyFXd6rZCAnuLBv6UeAULtrhT/F4A==",
+              "url": "https://registry.npmjs.org/prettier/-/prettier-3.2.5.tgz",
               "commit": "",
               "patch_args": [],
               "patches": [],

@@ -1,8 +1,8 @@
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 
 format_multirun(
-  name = "format",
-  visibility = ["//visibility:public"],
+    name = "format",
+    visibility = ["//visibility:public"],
 )
 
 load("@aspect_rules_lint//format:defs.bzl", "format_test")
@@ -12,5 +12,5 @@ format_test(
     # register languages, e.g.
     # python = "//:ruff",
     no_sandbox = True,
-    workspace = "//:WORKSPACE.bazel",
+    workspace = "//:WORKSPACE",
 )
