@@ -1,5 +1,11 @@
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
+load("@aspect_rules_lint//lint:ruff.bzl", "ruff_aspect")
 load("@npm//:prettier/package_json.bzl", prettier = "bin")
+
+ruff = ruff_aspect(
+    binary = "@@//:ruff",
+    configs = "@@//:.ruff.toml",
+)
 
 prettier.prettier_binary(
     name = "prettier",
@@ -10,6 +16,8 @@ prettier.prettier_binary(
 format_multirun(
     name = "format",
     javascript = ":prettier",
+    go = "@go_sdk//:bin/gofmt",
+    python = ":ruff",
     visibility = ["//visibility:public"],
 )
 
