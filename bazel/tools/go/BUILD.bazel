@@ -47,4 +47,3 @@ sh_binary(
     ],
     visibility = ["//visibility:public"],
 )
-
