@@ -19,8 +19,8 @@ prettier.prettier_binary(
 
 format_multirun(
     name = "format",
-    javascript = ":prettier",
     go = "@go_sdk//:bin/gofmt",
+    javascript = ":prettier",
     python = ":ruff",
     visibility = ["//visibility:public"],
 )
