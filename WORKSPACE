@@ -87,3 +87,7 @@ pip_parse(
 load("@pip_deps//:requirements.bzl", "install_deps")
 
 install_deps()
+
+load("@aspect_rules_lint//lint:ruff.bzl", "fetch_ruff")
+
+fetch_ruff()
