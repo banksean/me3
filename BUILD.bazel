@@ -64,3 +64,8 @@ ts_config(
 )
 
 npm_link_all_packages(name = "node_modules")
+
+alias(
+    name = "format",
+    actual = "//bazel/tools/format",
+)
