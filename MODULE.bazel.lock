@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 3,
-  "moduleFileHash": "f3f7ff1b3a871c968d0c35d7071aac6faecaaaec80442be831d6580df0cb9aef",
+  "moduleFileHash": "c8b1b0d9148a0696d47deb72a3a623218f0f046e826afd4bda302286b3d3de43",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -30,7 +30,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 21,
+            "line": 25,
             "column": 21
           },
           "imports": {},
@@ -44,7 +44,7 @@
               "devDependency": true,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 22,
+                "line": 26,
                 "column": 15
               }
             }
@@ -58,7 +58,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 25,
+            "line": 29,
             "column": 20
           },
           "imports": {
@@ -78,7 +78,7 @@
               "devDependency": true,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 27,
+                "line": 30,
                 "column": 23
               }
             }
@@ -92,7 +92,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 35,
+            "line": 37,
             "column": 21
           },
           "imports": {
@@ -109,7 +109,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 42,
+            "line": 45,
             "column": 29
           },
           "imports": {
@@ -125,7 +125,7 @@
               "devDependency": true,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 43,
+                "line": 46,
                 "column": 18
               }
             }
