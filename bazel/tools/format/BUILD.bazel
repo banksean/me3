@@ -1,4 +1,4 @@
-load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
+load("@aspect_rules_lint//format:defs.bzl", "format_multirun", "format_test")
 load("@npm//:prettier/package_json.bzl", prettier = "bin")
 
 alias(
@@ -24,8 +24,6 @@ format_multirun(
     python = ":ruff",
     visibility = ["//visibility:public"],
 )
-
-load("@aspect_rules_lint//format:defs.bzl", "format_test")
 
 format_test(
     name = "format_test",
