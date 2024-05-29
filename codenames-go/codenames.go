@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"math/rand"
@@ -20,11 +21,18 @@ const (
 	BLUE      = "BLUE"
 	BYSTANDER = "BYSTANDER"
 	ASSASSIN  = "ASSASSIN"
+
+	INTERACTIVE_PLAYER = "interactive"
 )
 
 var (
 	//go:embed wordlist.txt
 	wordlistFile string
+
+	blueSpyMasterType  = flag.String("blue-spy-master", INTERACTIVE_PLAYER, "type of player for the blue spy master role")
+	blueFieldAgentType = flag.String("blue-field-agent", INTERACTIVE_PLAYER, "type of player for the blue field agent role")
+	redSpyMasterType   = flag.String("red-spy-master", INTERACTIVE_PLAYER, "type of player for the red spy master role")
+	redFieldAgentType  = flag.String("red-field-agent", INTERACTIVE_PLAYER, "type of player for the red field agent role")
 )
 
 type gameBoard struct {
@@ -173,6 +181,8 @@ func NewGameBoard(d []string) *gameBoard {
 }
 
 func main() {
+	flag.Parse()
+
 	rl, err := readline.NewEx(
 		&readline.Config{
 			InterruptPrompt:     "^C",
@@ -189,33 +199,55 @@ func main() {
 	words := strings.Split(wordlistFile, "\n")
 	game := NewGameBoard(words)
 
-	ollamaSpyMasterRed := NewOLllamaSpyMaster(RED, "llama3")
-	ollamaSpyMasterBlue := NewOLllamaSpyMaster(BLUE, "gemma")
+	var redFieldAgent, redSpyMaster, blueFieldAgent, blueSpyMaster Player
 
-	ollamaFieldAgentRed := NewOLllamaOLlamaFieldAgent(RED, "llama3")
-	ollamaFieldAgentBlue := NewOLllamaOLlamaFieldAgent(BLUE, "gemma")
-
-	var redFieldAgent Player = &HumanFieldAgentTurn{
-		team: RED,
-		rl:   rl,
-	}
-	var redSpyMaster Player = &HumanSpyMasterTurn{
-		team: RED,
-		rl:   rl,
-	}
-	var blueFieldAgent Player = &HumanFieldAgentTurn{
-		team: BLUE,
-		rl:   rl,
-	}
-	var blueSpyMaster Player = &HumanSpyMasterTurn{
-		team: BLUE,
-		rl:   rl,
+	if *redFieldAgentType == INTERACTIVE_PLAYER {
+		redFieldAgent = &HumanFieldAgentTurn{
+			team: RED,
+			rl:   rl,
+		}
+	} else {
+		redFieldAgent, err = NewOLlamaFieldAgent(RED, *redFieldAgentType)
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 
-	redSpyMaster = ollamaSpyMasterRed
-	redFieldAgent = ollamaFieldAgentRed
-	blueSpyMaster = ollamaSpyMasterBlue
-	blueFieldAgent = ollamaFieldAgentBlue
+	if *redSpyMasterType == INTERACTIVE_PLAYER {
+		redSpyMaster = &HumanSpyMasterTurn{
+			team: RED,
+			rl:   rl,
+		}
+	} else {
+		redSpyMaster, err = NewOLllamaSpyMaster(RED, *redSpyMasterType)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+
+	if *blueFieldAgentType == INTERACTIVE_PLAYER {
+		blueFieldAgent = &HumanFieldAgentTurn{
+			team: BLUE,
+			rl:   rl,
+		}
+	} else {
+		blueFieldAgent, err = NewOLlamaFieldAgent(BLUE, *blueFieldAgentType)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+
+	if *blueSpyMasterType == INTERACTIVE_PLAYER {
+		blueSpyMaster = &HumanSpyMasterTurn{
+			team: BLUE,
+			rl:   rl,
+		}
+	} else {
+		blueSpyMaster, err = NewOLllamaSpyMaster(BLUE, *blueSpyMasterType)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
 
 	game.transitions = map[string]Player{
 		RED + "CLUE":   redFieldAgent,

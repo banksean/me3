@@ -5,33 +5,60 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"text/template"
 
 	"bitbucket.org/creachadair/stringset"
 	ollama "github.com/jmorganca/ollama/api"
 )
 
+var (
+	spyMasterPromptTmpl = template.Must(template.New("spymaster").Parse(
+		`Your task is to provide me with a single word clue to help me identify one of the words in the following list:
+	{{range .OurWords }}{{. | printf "%q"}} {{end}}
+Your clue cannot be any of the words in that list.
+Your clue cannot be a slight variation of any of the words in that list.
+Your clue must NOT be associated with any of the words in the following list:
+	{{range .NotOurWords }}{{. | printf "%q"}} {{end}}
+In particular, DO NOT offer a clue that might suggest the word {{ .AssassinWord | printf "%q" }}, because you will cause us to lose the game.
+Respond only with the single word clue.  
+Do not provide any explanation for why you chose the single word clue.
+> `))
+
+	fieldAgentPromptTmpl = template.Must(template.New("fieldagent").Parse(
+		`Based on the following clue: {{.Clue | printf "%q"}},
+	Your task is to identify one of the words in the following list:
+	{{range .Words }}{{. | printf "%q"}} {{end}}
+	Your guess MUST BE one and only one word from the above list.
+	Do not guess a word that is not in that list.
+	Your guess MUST NOT BE the word {{.Clue | printf "%q"}}.
+	Respond only with the single word, lowercase, with no punctuation.
+	Do NOT respond with any text OTHER THAN THAT ONE WORD.
+	> `))
+)
+
 type OLlamaSpyMasterTurn struct {
-	team   string
-	model  string
-	client *ollama.Client
+	team       string
+	model      string
+	promptTmpl *template.Template
+	client     *ollama.Client
 }
 
 var _ Player = &OLlamaSpyMasterTurn{}
 
-func NewOLllamaSpyMaster(team, model string) *OLlamaSpyMasterTurn {
+func NewOLllamaSpyMaster(team, model string) (*OLlamaSpyMasterTurn, error) {
 	client, err := ollama.ClientFromEnvironment()
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+		return nil, err
 	}
 
 	ret := &OLlamaSpyMasterTurn{
-		team:   team,
-		client: client,
-		model:  model,
+		team:       team,
+		client:     client,
+		model:      model,
+		promptTmpl: spyMasterPromptTmpl,
 	}
 
-	return ret
+	return ret, nil
 }
 
 func (s *OLlamaSpyMasterTurn) Team() string {
@@ -55,23 +82,19 @@ func (s *OLlamaSpyMasterTurn) Move(game *gameBoard) error {
 		notOurWords.Add(teamCards.Elements()...)
 	}
 	assassinWord := game.cards[ASSASSIN].Elements()[0]
-
-	prompt := fmt.Sprintf(`Your task is to provide me with a single word clue to help me identify one of the words in the following list:
-	[%s]
-Your clue cannot be any of the words in that list.
-Your clue cannot be a slight variation of any of the words in that list.
-Your clue must NOT be associated with any of the words in the following list:
-	[%s]
-In particular, DO NOT offer a clue that might suggest the word %q, because you will cause us to lose the game.
-Respond only with the single word clue.  
-Do not provide any explanation for why you chose the single word clue.
-> `,
-		strings.Join(ourRemainingWords.Elements(), ", "), strings.Join(notOurWords.Elements(), ", "), assassinWord)
-
+	promptData := map[string]any{
+		"OurWords":     ourRemainingWords.Elements(),
+		"NotOurWords":  notOurWords.Elements(),
+		"AssassinWord": assassinWord,
+	}
+	prompt := &strings.Builder{}
+	if err := s.promptTmpl.Execute(prompt, promptData); err != nil {
+		return err
+	}
 	streaming := false
 	request := ollama.GenerateRequest{
 		Model:   s.model,
-		Prompt:  prompt,
+		Prompt:  prompt.String(),
 		Context: []int{},
 		Stream:  &streaming,
 	}
@@ -86,34 +109,36 @@ Do not provide any explanation for why you chose the single word clue.
 		return err
 	}
 
+	input = strings.ToLower(input)
 	game.state = game.transitions[s.team+"CLUE"]
-	fmt.Printf("%s team SpyMaster's clue: %q\n", s.team, input)
+	fmt.Printf("%s team (%s) SpyMaster's clue: %q\n", s.team, s.model, input)
 	game.clue[s.team] = input
 	return nil
 }
 
 type OLlamaFieldAgentTurn struct {
-	team   string
-	model  string
-	client *ollama.Client
+	team       string
+	model      string
+	promptTmpl *template.Template
+	client     *ollama.Client
 }
 
 var _ Player = &OLlamaFieldAgentTurn{}
 
-func NewOLllamaOLlamaFieldAgent(team, model string) *OLlamaFieldAgentTurn {
+func NewOLlamaFieldAgent(team, model string) (*OLlamaFieldAgentTurn, error) {
 	client, err := ollama.ClientFromEnvironment()
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+		return nil, err
 	}
 
 	ret := &OLlamaFieldAgentTurn{
-		team:   team,
-		client: client,
-		model:  model,
+		team:       team,
+		client:     client,
+		promptTmpl: fieldAgentPromptTmpl,
+		model:      model,
 	}
 
-	return ret
+	return ret, nil
 }
 
 func (s *OLlamaFieldAgentTurn) Team() string {
@@ -132,21 +157,18 @@ func (s *OLlamaFieldAgentTurn) Move(game *gameBoard) error {
 		}
 		remainingWords.Remove(*game.guessedWords)
 		clue := game.clue[s.team]
-		prompt := fmt.Sprintf(`Based on the following clue: %s,
-Your task is to identify one of the words in the following list:
-	[%s]
-Your guess MUST BE one and only one word from the above list.
-Do not guess a word that is not in that list.
-Your guess MUST NOT BE the word %q.
-Respond only with the single word, lowercase, with no punctuation.
-Do NOT respond with any text OTHER THAN THAT ONE WORD.
-> `,
-			clue, strings.Join(remainingWords.Elements(), ", "), clue)
-
+		promptData := map[string]any{
+			"Clue":  clue,
+			"Words": remainingWords.Elements(),
+		}
+		prompt := &strings.Builder{}
+		if err := s.promptTmpl.Execute(prompt, promptData); err != nil {
+			return err
+		}
 		streaming := false
 		request := ollama.GenerateRequest{
 			Model:   s.model,
-			Prompt:  prompt,
+			Prompt:  prompt.String(),
 			Context: []int{},
 			Stream:  &streaming,
 		}
@@ -160,7 +182,7 @@ Do NOT respond with any text OTHER THAN THAT ONE WORD.
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%s team FieldAgent guessed %q based on the clue %q\n", s.team, input, clue)
+		fmt.Printf("%s team (%s) FieldAgent guessed %q based on the clue %q\n", s.team, s.model, input, clue)
 		team := ""
 		team, err = game.guess(input)
 		if err != nil {
