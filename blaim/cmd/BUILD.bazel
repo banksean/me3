@@ -5,7 +5,10 @@ go_library(
     srcs = ["main.go"],
     importpath = "github.com/banksean/me3/blaim/cmd",
     visibility = ["//visibility:private"],
-    deps = ["//blaim"],
+    deps = [
+        "//blaim",
+        "@com_github_sourcegraph_go_diff//diff",
+    ],
 )
 
 go_binary(

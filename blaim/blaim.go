@@ -2,7 +2,6 @@ package blaim
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 )
 
@@ -40,7 +39,7 @@ type AcceptLogLine struct {
 func ParseLogLine(logLine string) (*AcceptLogLine, error) {
 	jsonStart := strings.Index(logLine, "] ")
 	if jsonStart == -1 {
-		return nil, fmt.Errorf("couldn't find the start of json data in %q", logLine)
+		return nil, nil //fmt.Errorf("couldn't find the start of json data in %q", logLine)
 	}
 	jsonText := logLine[jsonStart+2:]
 	line := &AcceptLogLine{}

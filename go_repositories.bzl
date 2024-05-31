@@ -407,6 +407,24 @@ def go_repositories():
         version = "v1.19.2",
     )
     go_repository(
+        name = "com_github_shurcool_go",
+        importpath = "github.com/shurcooL/go",
+        sum = "h1:MZM7FHLqUHYI0Y/mQAt3d2aYa0SiNms/hFqC9qJYolM=",
+        version = "v0.0.0-20180423040247-9e1955d9fb6e",
+    )
+    go_repository(
+        name = "com_github_shurcool_go_goon",
+        importpath = "github.com/shurcooL/go-goon",
+        sum = "h1:llrF3Fs4018ePo4+G/HV/uQUqEI1HMDjCeOf2V6puPc=",
+        version = "v0.0.0-20170922171312-37c2f522c041",
+    )
+    go_repository(
+        name = "com_github_sourcegraph_go_diff",
+        importpath = "github.com/sourcegraph/go-diff",
+        sum = "h1:9uLlrd5T46OXs5qpp8L/MTltk0zikUGi0sNNyCpA8G0=",
+        version = "v0.7.0",
+    )
+    go_repository(
         name = "com_github_spf13_cobra",
         importpath = "github.com/spf13/cobra",
         sum = "h1:hyqWnYt1ZQShIddO5kBpj3vu05/++x6tJ6dg8EC572I=",

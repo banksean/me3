@@ -21,6 +21,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
+	github.com/sourcegraph/go-diff v0.7.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
