@@ -70,7 +70,7 @@ By convention, RED team always goes first.
 
 If any of the roles are `interactive`, the application will block on terminal input from the user, after printing a prompt describing which team and role should provide the input.
 
-Otherwise, the turns are executed as fast as the LLMs respond.  Playing two LLMs against each other locally can be slower that playing the same LLM against itself due to how OLlama 
+Otherwise, the turns are executed as fast as the LLMs respond.  Playing two LLMs against each other locally can be slower that playing the same LLM against itself due to how OLlama has to load the model again every time the game's turn changes to the other LLM.
 
 ### Game State and LLM interaction
 
