@@ -21,4 +21,4 @@ writing accepted suggestions logs: export ACCEPT_LOG=/<...>/accepted.suggestions
 
 ## Implementation
 
-The extension is a [`InlineCompletionItemProvider`](https://code.visualstudio.com/api/references/vscode-api#InlineCompletionItemProvider) that queries a local [ollama](ollama.dev) instance for code snippets to present as inline suggestions, and logs some information to the local file system every time the user accepts one of these suggestions.
+The extension is a [`InlineCompletionItemProvider`](https://code.visualstudio.com/api/references/vscode-api#InlineCompletionItemProvider) that queries a local [ollama](https://ollama.dev/) instance for code snippets to present as inline suggestions, and logs some information to the local file system every time the user accepts one of these suggestions.
