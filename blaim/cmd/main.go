@@ -55,7 +55,7 @@ func main() {
 	diffReader := diff.NewMultiFileDiffReader(os.Stdin)
 	acceptLogPath := os.Getenv(acceptLogEnvVar)
 	if acceptLogPath == "" {
-		fmt.Printf("%s environment variable is not set", acceptLogEnvVar)
+		fmt.Printf("%s environment variable is not set\n", acceptLogEnvVar)
 		os.Exit(1)
 	}
 	logFile, err := os.Open(acceptLogPath)
@@ -82,6 +82,9 @@ func main() {
 		if newName != origName {
 			accepts = append(accepts, acceptsForFile[newName]...)
 		}
+
+		fmt.Printf("%s: %d accept events, %d diff hunks\n", newName, len(accepts), len(fdiff.Hunks))
+
 		for _, hunk := range fdiff.Hunks {
 			body, addsStart := getAdditions(string(hunk.Body))
 			for _, accept := range accepts {

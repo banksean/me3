@@ -1,5 +1,7 @@
 {
-	"enabledApiProposals": ["inlineCompletionsAdditions"],
+	"enabledApiProposals": [
+		"inlineCompletionsAdditions"
+	],
 	"name": "blaim-completion",
 	"displayName": "blAIm Inline Completion",
 	"description": "Inline completion provider that logs accepted completions",
@@ -13,8 +15,11 @@
 		"Other"
 	],
 	"activationEvents": [
-		"*"
-	],
+		"onStartupFinished"
+  ],
+  "extensionKind": [
+    "ui"
+  ],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
@@ -41,11 +46,17 @@
 	},
 	"devDependencies": {
 		"@types/node": "^18",
+		"@types/vscode": "^1.74.0",
 		"@typescript-eslint/eslint-plugin": "^6.7.0",
 		"@typescript-eslint/parser": "^6.7.0",
-		"eslint": "^8.26.0",
-		"typescript": "^5.4.2",
 		"@vscode/dts": "^0.4.0",
-		"@types/vscode": "^1.74.0"
-	}
+		"eslint": "^8.26.0",
+		"typescript": "^5.4.2"
+	},
+	"dependencies": {
+		"ollama": "^0.5.1"
+	},
+	"extensionDependencies": [
+    "vscode.git"
+  ]
 }
