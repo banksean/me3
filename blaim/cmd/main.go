@@ -11,7 +11,7 @@ import (
 	"github.com/sourcegraph/go-diff/diff"
 )
 
-const ACCEPT_LOG = "ACCEPT_LOG"
+const acceptLogEnvVar = "ACCEPT_LOG"
 
 func processLogFile(in io.Reader) (map[string][]*blaim.AcceptLogLine, error) {
 	ret := map[string][]*blaim.AcceptLogLine{}
@@ -53,9 +53,9 @@ func getAdditions(body string) (string, int) {
 
 func main() {
 	diffReader := diff.NewMultiFileDiffReader(os.Stdin)
-	acceptLogPath := os.Getenv(ACCEPT_LOG)
+	acceptLogPath := os.Getenv(acceptLogEnvVar)
 	if acceptLogPath == "" {
-		fmt.Printf("%s environment variable is not set", ACCEPT_LOG)
+		fmt.Printf("%s environment variable is not set", acceptLogEnvVar)
 		os.Exit(1)
 	}
 	logFile, err := os.Open(acceptLogPath)
