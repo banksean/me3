@@ -19,3 +19,6 @@ writing accepted suggestions logs: export ACCEPT_LOG=/<...>/accepted.suggestions
 - Copy that `export ACCEPT_LOG=...` line from the debug console
 - Paste it into a shell window and run `git diff | bazel run //blaim/cmd` to verify that it can identify the AI-generated parts of the current set of code changes.
 
+## Implementation
+
+The extension is a [`InlineCompletionItemProvider`](https://code.visualstudio.com/api/references/vscode-api#InlineCompletionItemProvider) that queries a local [ollama](ollama.dev) instance for code snippets to present as inline suggestions, and logs some information to the local file system every time the user accepts one of these suggestions.
