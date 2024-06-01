@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/banksean/me3/blaim"
@@ -59,7 +60,10 @@ type BlaimLine struct {
 	InferenceConfig blaim.InferenceConfig `json:"inference_config"`
 }
 
-func main() {
+// Parses the accept logs, compares their contents to the current git diff results
+// and produces a json-formatted array of BlaimLine objects, one for each git diff hunk
+// that contains text that appears in the accept logs.
+func generateBlaimFile() {
 	diffReader := diff.NewMultiFileDiffReader(os.Stdin)
 	acceptLogPath := os.Getenv(acceptLogEnvVar)
 	if acceptLogPath == "" {
@@ -121,4 +125,80 @@ func main() {
 		}
 		fmt.Printf("%s\n", string(jsonBytes))
 	}
+}
+
+// parses a json-formatted list of BlaimLine objects from stdin,
+// and produces a line-by-line annotation of AI-generated code for
+// each file mentioned in the BlaimLine input list.
+func annotate() error {
+	reader := os.Stdin
+	um := json.NewDecoder(reader)
+	blaimLines := []*BlaimLine{}
+	for {
+		err := um.Decode(&blaimLines)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			fmt.Printf("error decoding BlaimLines: %v", err)
+			os.Exit(1)
+		}
+	}
+	fmt.Printf("decoded blaimLines: %v\n", blaimLines)
+	blaimLinesByFile := map[string][]*BlaimLine{}
+
+	for _, blaimLine := range blaimLines {
+		if _, ok := blaimLinesByFile[blaimLine.Filename]; !ok {
+			blaimLinesByFile[blaimLine.Filename] = []*BlaimLine{}
+		}
+		blaimLinesByFile[blaimLine.Filename] = append(blaimLinesByFile[blaimLine.Filename], blaimLine)
+	}
+
+	for fileName, fileBlaimLines := range blaimLinesByFile {
+		fileBytes, err := os.ReadFile(filepath.Join(baseDir, fileName))
+		if err != nil {
+			return err
+		}
+
+		fileLines := strings.Split(string(fileBytes), "\n")
+
+		// TODO: this doesn't handle multi-line code suggestions well.
+		// For instance, if an accepted suggestion spans multiple lines,
+		// (conains \n characters) then this will only annotate the *first*
+		// line containing the generated code suggestion.
+		for lineNumber, lineText := range fileLines {
+			linePrefix := " "
+			for _, blaimLine := range fileBlaimLines {
+				if blaimLine.Position.Line == lineNumber {
+					linePrefix = "*"
+				}
+			}
+			fmt.Printf("%s%s\n", linePrefix, lineText)
+		}
+	}
+	return nil
+}
+
+var (
+	baseDir = "/Users/seanmccullough/code/me3"
+)
+
+func main() {
+	cmd := "generate"
+	if len(os.Args) > 1 {
+		cmd = os.Args[1]
+	}
+	if cmd == "generate" {
+		generateBlaimFile()
+		return
+	}
+	if cmd == "annotate" {
+		if err := annotate(); err != nil {
+			fmt.Printf("annotate error: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	fmt.Printf("unrecognized command: %q\n", os.Args[1])
+	os.Exit(1)
 }
