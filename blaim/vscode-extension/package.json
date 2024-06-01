@@ -1,62 +1,62 @@
 {
-	"enabledApiProposals": [
-		"inlineCompletionsAdditions"
-	],
-	"name": "blaim-completion",
-	"displayName": "blAIm Inline Completion",
-	"description": "Inline completion provider that logs accepted completions",
-	"version": "0.0.1",
-	"publisher": "banksean",
-	"repository": "https://github.com/banksean/me3/blaim/vscode-extension",
-	"engines": {
-		"vscode": "^1.67.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"onStartupFinished"
+  "enabledApiProposals": [
+    "inlineCompletionsAdditions"
+  ],
+  "name": "blaim-completion",
+  "displayName": "blAIm Inline Completion",
+  "description": "Inline completion provider that logs accepted completions",
+  "version": "0.0.1",
+  "publisher": "banksean",
+  "repository": "https://github.com/banksean/me3/blaim/vscode-extension",
+  "engines": {
+    "vscode": "^1.67.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
   ],
   "extensionKind": [
     "ui"
   ],
-	"main": "./out/extension.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "extension.inline-completion-settings",
-				"title": "blAIm Inline Completion Settings"
-			}
-		],
-		"menus": {
-			"editor/inlineCompletions/actions": [
-				{
-					"command": "extension.inline-completion-settings"
-				}
-			]
-		}
-	},
-	"scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -p ./",
-		"lint": "eslint \"src/**/*.ts\"",
-		"watch": "tsc -watch -p ./",
-		"download-api": "dts dev",
-		"postinstall": "npm run download-api"
-	},
-	"devDependencies": {
-		"@types/node": "^18",
-		"@types/vscode": "^1.74.0",
-		"@typescript-eslint/eslint-plugin": "^6.7.0",
-		"@typescript-eslint/parser": "^6.7.0",
-		"@vscode/dts": "^0.4.0",
-		"eslint": "^8.26.0",
-		"typescript": "^5.4.2"
-	},
-	"dependencies": {
-		"ollama": "^0.5.1"
-	},
-	"extensionDependencies": [
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.inline-completion-settings",
+        "title": "blAIm Inline Completion Settings"
+      }
+    ],
+    "menus": {
+      "editor/inlineCompletions/actions": [
+        {
+          "command": "extension.inline-completion-settings"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "lint": "eslint \"src/**/*.ts\"",
+    "watch": "tsc -watch -p ./",
+    "download-api": "dts dev",
+    "postinstall": "npm run download-api"
+  },
+  "devDependencies": {
+    "@types/node": "^18",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "@vscode/dts": "^0.4.0",
+    "eslint": "^8.26.0",
+    "typescript": "^5.4.2"
+  },
+  "dependencies": {
+    "ollama": "^0.5.1"
+  },
+  "extensionDependencies": [
     "vscode.git"
   ]
 }
