@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -51,6 +52,13 @@ func getAdditions(body string) (string, int) {
 	return strings.Join(ret, "\n"), start
 }
 
+type BlaimLine struct {
+	Filename        string                `json:"filename"`
+	Position        blaim.Position        `json:"position"`
+	Text            string                `json:"text"`
+	InferenceConfig blaim.InferenceConfig `json:"inference_config"`
+}
+
 func main() {
 	diffReader := diff.NewMultiFileDiffReader(os.Stdin)
 	acceptLogPath := os.Getenv(acceptLogEnvVar)
@@ -83,17 +91,34 @@ func main() {
 			accepts = append(accepts, acceptsForFile[newName]...)
 		}
 
-		fmt.Printf("%s: %d accept events, %d diff hunks\n", newName, len(accepts), len(fdiff.Hunks))
+		blaimLines := []BlaimLine{}
 
 		for _, hunk := range fdiff.Hunks {
 			body, addsStart := getAdditions(string(hunk.Body))
 			for _, accept := range accepts {
 				idx := strings.Index(body, accept.Text)
 				if idx != -1 {
-					fmt.Printf("found a matching accept log entry for %q starting at position %d on line %d of %s:\n%v\n",
-						accept.Text, idx, int32(addsStart)+hunk.NewStartLine, newName, body)
+					blaimLine := BlaimLine{
+						Filename: accept.FileName,
+						Position: blaim.Position{
+							Line:      (addsStart) + int(hunk.NewStartLine),
+							Character: idx,
+						},
+						Text:            accept.Text,
+						InferenceConfig: accept.InferenceConfig,
+					}
+					blaimLines = append(blaimLines, blaimLine)
 				}
 			}
 		}
+		if len(blaimLines) == 0 {
+			continue
+		}
+		jsonBytes, err := json.MarshalIndent(blaimLines, "", "\t")
+		if err != nil {
+			fmt.Printf("error marshaling blaimLines: %v", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s\n", string(jsonBytes))
 	}
 }

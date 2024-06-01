@@ -19,3 +19,92 @@ function fibonacci(n: number) {
 }
 [...]
 ```
+
+## The `.blaim` file
+
+### Proposal
+
+- Keep the log of accepted suggestions in a `.blaim` file at the root of the git repository.
+- To find the accepted suggestions used in a particular commit, look at the contents of the `.blaim` file at that commit.
+- Overwrite the contents of `.blaim` with a git pre-commit hook, so it always reflects the changes of the most recent commit.
+  - If you didn't include any AI-generated code suggestions in your latest commit, the `.blaim` file should be empty at that commit.
+  - If you did accept AI-generated code suggestions, the `.blaim` file at that commit should include entries for each accepted suggestion, including filename, start line and character, and the text of the accepted suggestion.
+  - The `.blaim` file at a particular commit should never contain references to files that did not change in that same commit.
+- Run `git blame --line-porcelain` output into `//blaim/cmd`, and `blaim` can produce a secondary line-by-line annotation of which lines/ranges contain ai-generated code.
+
+### `.blaim` file format
+
+- Unordered list of records
+- Each record contains:
+  - Filename, relative to the repo root
+  - Insertion point:
+    - Line number
+    - Character number
+  - Text of accepted code suggestion
+  - Optional diagnostics:
+    - Model
+      - Identifier
+      - Model-specific parameters, e.g. temperature
+    - Prompt
+      - Template identifier, or raw text of template
+    - Editor
+      - Name, e.g. `vscode`, `vim` etc.
+      - Extension, e.g. `banksean.blaim-completion`, `ex3ndr.llama-coder` etc.
+
+Example `.blaim` file contents:
+```
+[
+        {
+                "filename": "blaim/vscode-extension/playground.js",
+                "position": {
+                        "line": 2,
+                        "character": 13
+                },
+                "text": "onacci(n)",
+                "inference_config": {
+                        "endpoint": "",
+                        "maxLines": 0,
+                        "maxTokens": 5,
+                        "temperature": 0.2,
+                        "modelName": "codellama",
+                        "modelFormat": "",
+                        "delay": 0
+                }
+        },
+        {
+                "filename": "blaim/vscode-extension/playground.js",
+                "position": {
+                        "line": 2,
+                        "character": 24
+                },
+                "text": "\n  if (n",
+                "inference_config": {
+                        "endpoint": "",
+                        "maxLines": 0,
+                        "maxTokens": 5,
+                        "temperature": 0.2,
+                        "modelName": "codellama",
+                        "modelFormat": "",
+                        "delay": 0
+                }
+        },
+        {
+                "filename": "blaim/vscode-extension/playground.js",
+                "position": {
+                        "line": 2,
+                        "character": 32
+                },
+                "text": " \u003c 2) {",
+                "inference_config": {
+                        "endpoint": "",
+                        "maxLines": 0,
+                        "maxTokens": 5,
+                        "temperature": 0.2,
+                        "modelName": "codellama",
+                        "modelFormat": "",
+                        "delay": 0
+                }
+        },
+        // ...
+]
+```

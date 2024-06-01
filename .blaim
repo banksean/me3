@@ -1,0 +1,172 @@
+[
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 2,
+			"character": 13
+		},
+		"text": "onacci(n)",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 2,
+			"character": 24
+		},
+		"text": "\n  if (n",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 2,
+			"character": 32
+		},
+		"text": " \u003c 2) {",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 2,
+			"character": 39
+		},
+		"text": "\n    return n;",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 2,
+			"character": 53
+		},
+		"text": "\n  } else {",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 2,
+			"character": 64
+		},
+		"text": "\n    return fibon",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 2,
+			"character": 81
+		},
+		"text": "acci(n - ",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 2,
+			"character": 90
+		},
+		"text": "1) + fibon",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 2,
+			"character": 81
+		},
+		"text": "acci(n - ",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 2,
+			"character": 109
+		},
+		"text": "2);\n  }",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	}
+]
