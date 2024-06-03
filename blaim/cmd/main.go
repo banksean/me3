@@ -39,6 +39,10 @@ func processLogFile(in io.Reader) (map[string][]*blaim.AcceptLogLine, error) {
 	return ret, nil
 }
 
+// Diff hunks contain both additions and deletions, but we only
+// care about the additions here. Returns the text of just the added
+// lines, if any, and the offset for the line within the hunk where
+// the additions start.
 func getAdditions(body string) (string, int) {
 	ret := []string{}
 	start := -1
@@ -80,7 +84,10 @@ func generateBlaimFile() {
 		fmt.Printf("error processing accept log: %v\n", err)
 		os.Exit(1)
 	}
-	for i := 0; ; i++ {
+
+	// Read the git diff output and check for blaim entries for each file mentioned
+	// in the diff.
+	for {
 		fdiff, err := diffReader.ReadFile()
 		if err == io.EOF {
 			break
@@ -88,31 +95,38 @@ func generateBlaimFile() {
 		if err != nil {
 			log.Fatalf("err reading diff: %s", err)
 		}
+		// Strip the "a/" and "b/" prefixes from the diff file names.
 		origName := fdiff.OrigName[2:]
 		newName := fdiff.NewName[2:]
 		accepts := acceptsForFile[origName]
+		// If the filename changed in this diff, group the accept logs for the
+		// old name and the new name together.
 		if newName != origName {
 			accepts = append(accepts, acceptsForFile[newName]...)
 		}
-
 		blaimLines := []BlaimLine{}
 
+		// Now check each "hunk" in the diff'd file to see if there are any
+		// entries in the .blaim file about it.
 		for _, hunk := range fdiff.Hunks {
-			body, addsStart := getAdditions(string(hunk.Body))
+			addedInDiffHunk, addsStart := getAdditions(string(hunk.Body))
 			for _, accept := range accepts {
-				idx := strings.Index(body, accept.Text)
-				if idx != -1 {
-					blaimLine := BlaimLine{
-						Filename: accept.FileName,
-						Position: blaim.Position{
-							Line:      (addsStart) + int(hunk.NewStartLine),
-							Character: idx,
-						},
-						Text:            accept.Text,
-						InferenceConfig: accept.InferenceConfig,
-					}
-					blaimLines = append(blaimLines, blaimLine)
+				idx := strings.Index(addedInDiffHunk, accept.Text)
+				if idx < 0 {
+					continue
 				}
+				lineOffset := len(strings.Split(addedInDiffHunk[:idx], "\n"))
+
+				blaimLine := BlaimLine{
+					Filename: accept.FileName,
+					Position: blaim.Position{
+						Line:      lineOffset + addsStart + int(hunk.NewStartLine),
+						Character: idx,
+					},
+					Text:            accept.Text,
+					InferenceConfig: accept.InferenceConfig,
+				}
+				blaimLines = append(blaimLines, blaimLine)
 			}
 		}
 		if len(blaimLines) == 0 {
@@ -123,8 +137,28 @@ func generateBlaimFile() {
 			fmt.Printf("error marshaling blaimLines: %v", err)
 			os.Exit(1)
 		}
-		fmt.Printf("%s\n", string(jsonBytes))
+		if true {
+			fmt.Printf("%s\n", string(jsonBytes))
+
+		}
 	}
+}
+
+// Represents the set of blaim lines and ranges for a particular source file.
+type BlaimRangeSet struct {
+	blaimLines []*BlaimLine
+}
+
+func (s *BlaimRangeSet) ForSourceLine(lineNumber int) []*BlaimLine {
+	ret := []*BlaimLine{}
+	for _, blaimLine := range s.blaimLines {
+		textLines := strings.Split(blaimLine.Text, "\n")
+		if lineNumber >= blaimLine.Position.Line &&
+			lineNumber <= blaimLine.Position.Line+len(textLines) {
+			ret = append(ret, blaimLine)
+		}
+	}
+	return ret
 }
 
 // parses a json-formatted list of BlaimLine objects from stdin,
@@ -143,9 +177,9 @@ func annotate() error {
 			os.Exit(1)
 		}
 	}
-	fmt.Printf("decoded blaimLines: %v\n", blaimLines)
 	blaimLinesByFile := map[string][]*BlaimLine{}
 
+	// Group the blaim lines by the source file path they refer to.
 	for _, blaimLine := range blaimLines {
 		if _, ok := blaimLinesByFile[blaimLine.Filename]; !ok {
 			blaimLinesByFile[blaimLine.Filename] = []*BlaimLine{}
@@ -154,6 +188,9 @@ func annotate() error {
 	}
 
 	for fileName, fileBlaimLines := range blaimLinesByFile {
+		blaimRangeSet := &BlaimRangeSet{
+			blaimLines: fileBlaimLines,
+		}
 		fileBytes, err := os.ReadFile(filepath.Join(baseDir, fileName))
 		if err != nil {
 			return err
@@ -166,11 +203,10 @@ func annotate() error {
 		// (conains \n characters) then this will only annotate the *first*
 		// line containing the generated code suggestion.
 		for lineNumber, lineText := range fileLines {
-			linePrefix := " "
-			for _, blaimLine := range fileBlaimLines {
-				if blaimLine.Position.Line == lineNumber {
-					linePrefix = "*"
-				}
+			linePrefix := "  "
+			blaimLineMatches := blaimRangeSet.ForSourceLine(lineNumber)
+			if len(blaimLineMatches) > 0 {
+				linePrefix = "* "
 			}
 			fmt.Printf("%s%s\n", linePrefix, lineText)
 		}

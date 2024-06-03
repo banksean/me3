@@ -80,7 +80,7 @@ export function activate(context: vscode.ExtensionContext) {
       const response = await ollama.generate(req);
       const text = response.response;
       console.log("ollama.generate response text length:", text.length);
-
+			console.log('position:', position);
       const ret: vscode.InlineCompletionList = {
         items: [
           {

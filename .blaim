@@ -2,10 +2,10 @@
 	{
 		"filename": "blaim/vscode-extension/playground.js",
 		"position": {
-			"line": 2,
-			"character": 13
+			"line": 21,
+			"character": 33
 		},
-		"text": "onacci(n)",
+		"text": "um(a, b",
 		"inference_config": {
 			"endpoint": "",
 			"maxLines": 0,
@@ -19,10 +19,10 @@
 	{
 		"filename": "blaim/vscode-extension/playground.js",
 		"position": {
-			"line": 2,
-			"character": 24
+			"line": 21,
+			"character": 40
 		},
-		"text": "\n  if (n",
+		"text": ") {\n  return",
 		"inference_config": {
 			"endpoint": "",
 			"maxLines": 0,
@@ -36,10 +36,10 @@
 	{
 		"filename": "blaim/vscode-extension/playground.js",
 		"position": {
-			"line": 2,
-			"character": 32
+			"line": 22,
+			"character": 52
 		},
-		"text": " \u003c 2) {",
+		"text": " a + b;\n",
 		"inference_config": {
 			"endpoint": "",
 			"maxLines": 0,
@@ -53,10 +53,10 @@
 	{
 		"filename": "blaim/vscode-extension/playground.js",
 		"position": {
-			"line": 2,
-			"character": 39
+			"line": 23,
+			"character": 60
 		},
-		"text": "\n    return n;",
+		"text": "}\n\n// This",
 		"inference_config": {
 			"endpoint": "",
 			"maxLines": 0,
@@ -70,10 +70,10 @@
 	{
 		"filename": "blaim/vscode-extension/playground.js",
 		"position": {
-			"line": 2,
-			"character": 53
+			"line": 26,
+			"character": 95
 		},
-		"text": "\n  } else {",
+		"text": "function testSum() {",
 		"inference_config": {
 			"endpoint": "",
 			"maxLines": 0,
@@ -87,10 +87,10 @@
 	{
 		"filename": "blaim/vscode-extension/playground.js",
 		"position": {
-			"line": 2,
-			"character": 64
+			"line": 27,
+			"character": 118
 		},
-		"text": "\n    return fibon",
+		"text": "let v = sum(",
 		"inference_config": {
 			"endpoint": "",
 			"maxLines": 0,
@@ -104,10 +104,10 @@
 	{
 		"filename": "blaim/vscode-extension/playground.js",
 		"position": {
-			"line": 2,
-			"character": 81
+			"line": 27,
+			"character": 130
 		},
-		"text": "acci(n - ",
+		"text": "2, 3);",
 		"inference_config": {
 			"endpoint": "",
 			"maxLines": 0,
@@ -121,10 +121,10 @@
 	{
 		"filename": "blaim/vscode-extension/playground.js",
 		"position": {
-			"line": 2,
-			"character": 90
+			"line": 18,
+			"character": 2
 		},
-		"text": "1) + fibon",
+		"text": "//console.log(",
 		"inference_config": {
 			"endpoint": "",
 			"maxLines": 0,
@@ -138,10 +138,10 @@
 	{
 		"filename": "blaim/vscode-extension/playground.js",
 		"position": {
-			"line": 2,
-			"character": 81
+			"line": 18,
+			"character": 15
 		},
-		"text": "acci(n - ",
+		"text": "(v);\n}",
 		"inference_config": {
 			"endpoint": "",
 			"maxLines": 0,
@@ -155,10 +155,112 @@
 	{
 		"filename": "blaim/vscode-extension/playground.js",
 		"position": {
-			"line": 2,
-			"character": 109
+			"line": 23,
+			"character": 61
 		},
-		"text": "2);\n  }",
+		"text": "\n\n// This is",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 33,
+			"character": 236
+		},
+		"text": "\nfunction testDemo()",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 26,
+			"character": 113
+		},
+		"text": " {\n  let v",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 35,
+			"character": 266
+		},
+		"text": " = demoVar + demo",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 35,
+			"character": 283
+		},
+		"text": "2;\n  //",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 18,
+			"character": 4
+		},
+		"text": "console.log(v",
+		"inference_config": {
+			"endpoint": "",
+			"maxLines": 0,
+			"maxTokens": 5,
+			"temperature": 0.2,
+			"modelName": "codellama",
+			"modelFormat": "",
+			"delay": 0
+		}
+	},
+	{
+		"filename": "blaim/vscode-extension/playground.js",
+		"position": {
+			"line": 18,
+			"character": 17
+		},
+		"text": ");\n}\n\n",
 		"inference_config": {
 			"endpoint": "",
 			"maxLines": 0,
