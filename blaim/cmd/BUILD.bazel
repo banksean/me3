@@ -8,6 +8,7 @@ go_library(
     deps = [
         "//blaim",
         "@com_github_sourcegraph_go_diff//diff",
+        "@com_github_urfave_cli_v2//:cli",
     ],
 )
 

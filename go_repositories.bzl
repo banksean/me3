@@ -89,6 +89,12 @@ def go_repositories():
         version = "v1.0.3",
     )
     go_repository(
+        name = "com_github_cpuguy83_go_md2man_v2",
+        importpath = "github.com/cpuguy83/go-md2man/v2",
+        sum = "h1:wfIWP927BUkWJb2NmU/kNDYIBTh/ziUX91+lVfRxZq4=",
+        version = "v2.0.4",
+    )
+    go_repository(
         name = "com_github_cratonica_2goarray",
         importpath = "github.com/cratonica/2goarray",
         sum = "h1:Wg+722vs7a2zQH5lR9QWYsVbplKeffaQFIs5FTdfNNo=",
@@ -401,6 +407,12 @@ def go_repositories():
         version = "v1.11.0",
     )
     go_repository(
+        name = "com_github_russross_blackfriday_v2",
+        importpath = "github.com/russross/blackfriday/v2",
+        sum = "h1:JIOH55/0cWyOuilr9/qlrm0BSXldqnqwMsf35Ld67mk=",
+        version = "v2.1.0",
+    )
+    go_repository(
         name = "com_github_sashabaranov_go_openai",
         importpath = "github.com/sashabaranov/go-openai",
         sum = "h1:+dkuCADSnwXV02YVJkdphY8XD9AyHLUWwk6V7LB6EL8=",
@@ -455,10 +467,22 @@ def go_repositories():
         version = "v1.2.11",
     )
     go_repository(
+        name = "com_github_urfave_cli_v2",
+        importpath = "github.com/urfave/cli/v2",
+        sum = "h1:6e0H+AkS+zDckwPCUrZkKX38mRaau4nL2uipkJpbkcI=",
+        version = "v2.27.2",
+    )
+    go_repository(
         name = "com_github_wk8_go_ordered_map_v2",
         importpath = "github.com/wk8/go-ordered-map/v2",
         sum = "h1:5h/BUHu93oj4gIdvHHHGsScSTMijfx5PeYkE/fJgbpc=",
         version = "v2.1.8",
+    )
+    go_repository(
+        name = "com_github_xrash_smetrics",
+        importpath = "github.com/xrash/smetrics",
+        sum = "h1:+qGGcbkzsfDQNPPe9UDgpxAWQrhbbBXOYJFQDq/dtJw=",
+        version = "v0.0.0-20240312152122-5f08fbb34913",
     )
     go_repository(
         name = "com_google_cloud_go",

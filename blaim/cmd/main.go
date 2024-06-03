@@ -1,3 +1,4 @@
+// package main is the main cli entry point for blaim commands
 package main
 
 import (
@@ -10,12 +11,29 @@ import (
 	"strings"
 
 	"github.com/banksean/me3/blaim"
+
 	"github.com/sourcegraph/go-diff/diff"
+	"github.com/urfave/cli/v2"
 )
 
-const acceptLogEnvVar = "ACCEPT_LOG"
+// BlaimLine represents an entry in a .blaim file.
+type BlaimLine struct {
+	// Filename is the path of a file that contains an AI-generated code suggestion.
+	Filename string `json:"filename"`
+	// Position identifies the line number and starting character of where
+	// the generated code was inserted.
+	Position blaim.Position `json:"position"`
+	// Text is the raw text of the AI-generated code suggestion.
+	Text string `json:"text"`
+	// InferenceConfig describes the request sent to the code-generating model,
+	// (e.g. the name of the model, temperature etc).
+	InferenceConfig blaim.InferenceConfig `json:"inference_config"`
+}
 
-func processLogFile(in io.Reader) (map[string][]*blaim.AcceptLogLine, error) {
+// processAcceptedSuggestionsLog parses the contents of a "accepted.suggestions.log" file
+// which the VS Code extension has been writing entries to as the user has edited
+// code and accepted AI-generated suggestions.
+func processAcceptedSuggestionsLog(in io.Reader) (map[string][]*blaim.AcceptLogLine, error) {
 	ret := map[string][]*blaim.AcceptLogLine{}
 
 	b, err := io.ReadAll(in)
@@ -57,32 +75,14 @@ func getAdditions(body string) (string, int) {
 	return strings.Join(ret, "\n"), start
 }
 
-type BlaimLine struct {
-	Filename        string                `json:"filename"`
-	Position        blaim.Position        `json:"position"`
-	Text            string                `json:"text"`
-	InferenceConfig blaim.InferenceConfig `json:"inference_config"`
-}
-
 // Parses the accept logs, compares their contents to the current git diff results
 // and produces a json-formatted array of BlaimLine objects, one for each git diff hunk
 // that contains text that appears in the accept logs.
-func generateBlaimFile() {
+func generate(logReader io.Reader) error {
 	diffReader := diff.NewMultiFileDiffReader(os.Stdin)
-	acceptLogPath := os.Getenv(acceptLogEnvVar)
-	if acceptLogPath == "" {
-		fmt.Printf("%s environment variable is not set\n", acceptLogEnvVar)
-		os.Exit(1)
-	}
-	logFile, err := os.Open(acceptLogPath)
+	acceptsForFile, err := processAcceptedSuggestionsLog(logReader)
 	if err != nil {
-		fmt.Printf("error opening accept log at %s: %v\n", acceptLogPath, err)
-		os.Exit(1)
-	}
-	acceptsForFile, err := processLogFile(logFile)
-	if err != nil {
-		fmt.Printf("error processing accept log: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error processing accept log: %v", err)
 	}
 
 	// Read the git diff output and check for blaim entries for each file mentioned
@@ -93,7 +93,7 @@ func generateBlaimFile() {
 			break
 		}
 		if err != nil {
-			log.Fatalf("err reading diff: %s", err)
+			return fmt.Errorf("err reading diff: %s", err)
 		}
 		// Strip the "a/" and "b/" prefixes from the diff file names.
 		origName := fdiff.OrigName[2:]
@@ -134,14 +134,12 @@ func generateBlaimFile() {
 		}
 		jsonBytes, err := json.MarshalIndent(blaimLines, "", "\t")
 		if err != nil {
-			fmt.Printf("error marshaling blaimLines: %v", err)
-			os.Exit(1)
+			return fmt.Errorf("error marshaling blaimLines: %v", err)
 		}
-		if true {
-			fmt.Printf("%s\n", string(jsonBytes))
 
-		}
+		fmt.Printf("%s\n", string(jsonBytes))
 	}
+	return nil
 }
 
 // Represents the set of blaim lines and ranges for a particular source file.
@@ -149,8 +147,14 @@ type BlaimRangeSet struct {
 	blaimLines []*BlaimLine
 }
 
+// ForSourceLine returns the BlaimLines that cover that line of the source file.
 func (s *BlaimRangeSet) ForSourceLine(lineNumber int) []*BlaimLine {
 	ret := []*BlaimLine{}
+	// This problem is straight out of a coding interview question:
+	//   "Given a list of ranges (start, end), write a function that returns true
+	//   if a particular value falls within any of the ranges."
+	// And reader, this O(number of ranges) solution is not what the interviewer
+	// wants to see, but it's sufficient for this PoC:
 	for _, blaimLine := range s.blaimLines {
 		textLines := strings.Split(blaimLine.Text, "\n")
 		if lineNumber >= blaimLine.Position.Line &&
@@ -159,6 +163,10 @@ func (s *BlaimRangeSet) ForSourceLine(lineNumber int) []*BlaimLine {
 		}
 	}
 	return ret
+}
+
+func formatAnnotationLinePrefix(line *BlaimLine) string {
+	return fmt.Sprintf("[%s, temp: %.1f] ", line.InferenceConfig.ModelName, line.InferenceConfig.Temperature)
 }
 
 // parses a json-formatted list of BlaimLine objects from stdin,
@@ -179,13 +187,21 @@ func annotate() error {
 	}
 	blaimLinesByFile := map[string][]*BlaimLine{}
 
+	longestLinePrefixLen := -1
+
 	// Group the blaim lines by the source file path they refer to.
 	for _, blaimLine := range blaimLines {
 		if _, ok := blaimLinesByFile[blaimLine.Filename]; !ok {
 			blaimLinesByFile[blaimLine.Filename] = []*BlaimLine{}
 		}
 		blaimLinesByFile[blaimLine.Filename] = append(blaimLinesByFile[blaimLine.Filename], blaimLine)
+		linePrefix := formatAnnotationLinePrefix(blaimLine)
+		if len(linePrefix) > longestLinePrefixLen {
+			longestLinePrefixLen = len(linePrefix)
+		}
 	}
+
+	defaultLinePrefix := strings.Repeat(" ", longestLinePrefixLen)
 
 	for fileName, fileBlaimLines := range blaimLinesByFile {
 		blaimRangeSet := &BlaimRangeSet{
@@ -203,10 +219,12 @@ func annotate() error {
 		// (conains \n characters) then this will only annotate the *first*
 		// line containing the generated code suggestion.
 		for lineNumber, lineText := range fileLines {
-			linePrefix := "  "
+			linePrefix := defaultLinePrefix
 			blaimLineMatches := blaimRangeSet.ForSourceLine(lineNumber)
 			if len(blaimLineMatches) > 0 {
-				linePrefix = "* "
+				// Just use the first blaim entry, if there is more than one for
+				// this line of the diff.
+				linePrefix = formatAnnotationLinePrefix(blaimLineMatches[0])
 			}
 			fmt.Printf("%s%s\n", linePrefix, lineText)
 		}
@@ -215,26 +233,59 @@ func annotate() error {
 }
 
 var (
-	baseDir = "/Users/seanmccullough/code/me3"
+	baseDir                    string
+	acceptedSuggestionsLogPath string
 )
 
 func main() {
-	cmd := "generate"
-	if len(os.Args) > 1 {
-		cmd = os.Args[1]
-	}
-	if cmd == "generate" {
-		generateBlaimFile()
-		return
-	}
-	if cmd == "annotate" {
-		if err := annotate(); err != nil {
-			fmt.Printf("annotate error: %v\n", err)
-			os.Exit(1)
-		}
-		return
+	app := &cli.App{
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "root",
+				Value:       ".",
+				Usage:       "path to the root of the git checkout",
+				Destination: &baseDir,
+			},
+		},
+		Commands: []*cli.Command{
+			{
+				Name:    "generate",
+				Aliases: []string{"g"},
+				Usage:   "generate a .blaim file from accepted.suggestions.log",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "accept-log",
+						Value:       "",
+						Usage:       "path to the accepted.suggestions.log file",
+						Destination: &acceptedSuggestionsLogPath,
+					},
+				},
+				Action: func(cCtx *cli.Context) error {
+					logFile, err := os.Open(acceptedSuggestionsLogPath)
+					if err != nil {
+						return fmt.Errorf("error opening accept log at %s: %v", acceptedSuggestionsLogPath, err)
+					}
+
+					return generate(logFile)
+				},
+			},
+			{
+				Name:    "annotate",
+				Aliases: []string{"a"},
+				Usage:   "produce a line-by-line annotation of source files that contain machine-generated code changes",
+				Action: func(cCtx *cli.Context) error {
+					return annotate()
+				},
+			},
+		},
+		Name:  "blaim",
+		Usage: "manage the attributrion of machine-generated code changes",
+		Action: func(*cli.Context) error {
+			return nil
+		},
 	}
 
-	fmt.Printf("unrecognized command: %q\n", os.Args[1])
-	os.Exit(1)
+	if err := app.Run(os.Args); err != nil {
+		log.Fatal(err)
+	}
 }
