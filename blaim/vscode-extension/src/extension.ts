@@ -2,7 +2,8 @@ import * as vscode from "vscode";
 import ollama from "ollama";
 import { GenerateRequest } from "ollama";
 import type { GitExtension } from "./git";
-import { activateDecorators } from "./decorator";
+import { activateDecorators} from "./decorator";
+import {accepts, AcceptLogLine } from './acceptlog';
 
 const modelName = "codellama";
 const acceptSuggestCommand = "blaim.acceptSuggestion";
@@ -29,7 +30,7 @@ function formatPrompt(prefix: string, suffix: string) {
 export function activate(context: vscode.ExtensionContext) {
   console.log("blaim-completion started");
   activateDecorators(context);
-  
+
   const acceptLogger = vscode.window.createOutputChannel(
     "accepted.suggestions",
     { log: true },
@@ -40,7 +41,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.commands.registerCommand(acceptSuggestCommand, async (...args) => {
     const acceptEvent = args[0];
-    const inferenceCofig = acceptEvent.inferenceConfig;
+    const inferenceConfig = acceptEvent.inferenceConfig;
 
     const gitExtension =
       vscode.extensions.getExtension<GitExtension>("vscode.git")?.exports;
@@ -49,17 +50,19 @@ export function activate(context: vscode.ExtensionContext) {
     for (const repo of git?.repositories || []) {
       if (acceptEvent.fileName.indexOf(repo?.rootUri.path) === 0) {
         const headCommit = repo?.state.HEAD;
+        const acceptLogLine: AcceptLogLine = {
+          fileName: acceptEvent.fileName.substring(
+            repo?.rootUri.path.length + 1,
+          ),
+          position: acceptEvent.position,
+          text: acceptEvent.text,
+          headGitCommit: headCommit,
+          inferenceConfig: inferenceConfig,
+        };
         acceptLogger.appendLine(
-          JSON.stringify({
-            fileName: acceptEvent.fileName.substring(
-              repo?.rootUri.path.length + 1,
-            ),
-            position: acceptEvent.position,
-            text: acceptEvent.text,
-            headGitCommit: headCommit,
-            inferenceConfig: inferenceCofig,
-          }),
+          JSON.stringify(acceptLogLine),
         );
+        accepts.push(acceptLogLine);
       }
     }
   });
@@ -75,7 +78,7 @@ export function activate(context: vscode.ExtensionContext) {
         stream: false,
         options: {
           stop: prompt.stop,
-          num_predict: 5,
+          num_predict: 20,
           temperature: 0.2,
         },
       };

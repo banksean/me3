@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import {accepts, AcceptLogLine } from './acceptlog';
 
 // this method is called when vs code is activated
 export function activateDecorators(context: vscode.ExtensionContext) {
@@ -12,58 +13,41 @@ export function activateDecorators(context: vscode.ExtensionContext) {
   const toggle = vscode.commands.registerCommand(
     "coverage-gutters.toggleCoverage",
     toggleCallback,
-//    gutters.toggleCoverageForActiveFile.bind(gutters),
   );
 
   context.subscriptions.push(toggle);
 
   let timeout: string | number | NodeJS.Timeout | undefined = undefined;
 
-	const gutterBlameAnnotationType = vscode.window.createTextEditorDecorationType({
-		rangeBehavior: vscode.DecorationRangeBehavior.OpenOpen,
-    isWholeLine: true,
-    gutterIconSize: 'contain',
-    before: {
-      color: 'lightgray',
-//      backgroundColor: 'blue',
-      width: '100px',
-      height: '100%',
-      margin: '0 26px -1px 0',
-      contentText: ''
-    },
-	});
-
-  // const gutterBlameHighlightType = vscode.window.createTextEditorDecorationType({
-  // //  gutterIconPath: gutterHighlightUri,
-  //   gutterIconSize: 'contain',
+	// const gutterBlameAnnotationType = vscode.window.createTextEditorDecorationType({
+	// 	rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
   //   isWholeLine: true,
-  //   overviewRulerLane: vscode.OverviewRulerLane.Full,
-  //   backgroundColor: 'green',
-  //   overviewRulerColor: 'magenta'
-  // });
+  //   gutterIconSize: 'contain',
+  //   before: {
+  //     color: 'gray',
+  //     width: '100px',
+  //     height: '100%',
+  //     margin: '0 26px -1px 0',
+  //     contentText: ''
+  //   },
+	// });
 
-  const smallNumberDecorationType = vscode.window.createTextEditorDecorationType({
-    borderWidth: '1px',
-    borderStyle: 'solid',
+  const inlineDecorationType = vscode.window.createTextEditorDecorationType({
+    rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
     overviewRulerColor: 'blue',
     overviewRulerLane: vscode.OverviewRulerLane.Right,
     light: {
         // this color will be used in light color themes
-        borderColor: 'darkblue'
+        backgroundColor: 'lightgray',
+        //borderColor: 'darkblue'
     },
     dark: {
+        //borderRadius: '8px',
         // this color will be used in dark color themes
-        borderColor: 'lightblue'
+        //borderColor: 'lightblue'
+        backgroundColor: 'midnightblue'
     }
   });
-
-
-	// create a decorator type that we use to decorate large numbers
-	const largeNumberDecorationType = vscode.window.createTextEditorDecorationType({
-		cursor: 'crosshair',
-		// use a themable color. See package.json for the declaration and default values.
-		backgroundColor: { id: 'myextension.largeNumberBackground' }
-	});
 
 	let activeEditor = vscode.window.activeTextEditor;
 
@@ -71,53 +55,40 @@ export function activateDecorators(context: vscode.ExtensionContext) {
 		if (!activeEditor) {
 			return;
 		}
-		const regEx = /\d+/g;
 		const text = activeEditor.document.getText();
-		const smallNumbers: vscode.DecorationOptions[] = [];
-		const largeNumbers: vscode.DecorationOptions[] = [];
+		const inlineDecorations: vscode.DecorationOptions[] = [];
     const gutterBlameAnnotations: vscode.DecorationOptions[] = [];
-    //const gutterHighlightAnnotations: vscode.DecorationOptions[] = [];
 
-		let match;
-		while ((match = regEx.exec(text))) {
-			const startPos = activeEditor.document.positionAt(match.index);
-			const endPos = activeEditor.document.positionAt(match.index + match[0].length);
-			const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: 'Number **' + match[0] + '**' };
-			if (match[0].length < 3) {
-				smallNumbers.push(decoration);
-			} else {
-				largeNumbers.push(decoration);
-			}
+    for (let i =0; i<accepts.length; i++) {
+      const acceptLine = accepts[i];
+      if (activeEditor.document.fileName.indexOf(acceptLine.fileName) != -1) {
+        const acceptedLines = acceptLine.text.split('\n');
+        const endPos = new vscode.Position(acceptLine.position.line + acceptedLines.length, acceptedLines?.pop()?.length || 0);
+        const decoration:vscode.DecorationOptions = { 
+          range: new vscode.Range(acceptLine.position, endPos), 
+          hoverMessage: new vscode.MarkdownString("## This is AI-generated code:\n```" + JSON.stringify(acceptLine.inferenceConfig) + "```\n"  + `at ${JSON.stringify(acceptLine.position)}\n`+ "## Raw text from the model:\n```\n" + acceptLine.text + "\n```\n"),
+        };
+        inlineDecorations.push(decoration);
+      }
     }
+    // Line-by-line gutter annotations
     const textLines = text.split('\n');
     for (let lineNumber = 0; lineNumber < textLines.length; lineNumber++) {
       const linePos = new vscode.Position(lineNumber, 0);
       const gutterAnnotation: vscode.DecorationOptions = {
-        range: new vscode.Range(linePos, linePos), hoverMessage: 'blaim hover message',
+        range: new vscode.Range(linePos, linePos), 
+        //hoverMessage: 'blaim hover message',
         renderOptions: {
           before: {
             contentText: `blaim line ${lineNumber}`,
           }
         }
-        // renderOptions: {
-        //   before: {
-        //     color: 'red',
-        //     backgroundColor: 'blue',
-        //     width: '100px',
-        //     height: '100%',
-        //     margin: '0 26px -1px 0',
-        //     contentText: 'gutter text'
-        //   },
-        //},
       };
       gutterBlameAnnotations.push(gutterAnnotation);
 		}
     
-		activeEditor.setDecorations(smallNumberDecorationType, smallNumbers);
-		activeEditor.setDecorations(largeNumberDecorationType, largeNumbers);
-
-    activeEditor.setDecorations(gutterBlameAnnotationType, gutterBlameAnnotations);
-    //activeEditor.setDecorations(gutterBlameHighlightType, gutterHighlightAnnotations);
+		activeEditor.setDecorations(inlineDecorationType, inlineDecorations);
+    //    activeEditor.setDecorations(gutterBlameAnnotationType, gutterBlameAnnotations);
 	}
 
 	function triggerUpdateDecorations(throttle = false) {
