@@ -11,7 +11,9 @@ import (
 
 	"bitbucket.org/creachadair/stringset"
 	"github.com/chzyer/readline"
-	"github.com/olekukonko/tablewriter"
+
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 
 	_ "embed"
 )
@@ -63,25 +65,23 @@ type Player interface {
 const GUESSED = "guessed-"
 
 var (
-	defaultColor = tablewriter.Colors{tablewriter.Normal, tablewriter.FgWhiteColor, tablewriter.BgBlackColor}
-	teamColor    = map[string]tablewriter.Colors{
-		RED:                 {tablewriter.Normal, tablewriter.FgRedColor, tablewriter.BgBlackColor},
-		BLUE:                {tablewriter.Normal, tablewriter.FgBlueColor, tablewriter.BgBlackColor},
-		BYSTANDER:           {tablewriter.Normal, tablewriter.FgWhiteColor, tablewriter.BgBlackColor},
-		ASSASSIN:            {tablewriter.Normal, tablewriter.FgYellowColor, tablewriter.BgBlackColor},
-		RED + GUESSED:       {tablewriter.Normal, tablewriter.FgBlackColor, tablewriter.BgRedColor},
-		BLUE + GUESSED:      {tablewriter.Normal, tablewriter.FgBlackColor, tablewriter.BgBlueColor},
-		BYSTANDER + GUESSED: {tablewriter.Normal, tablewriter.FgBlackColor, tablewriter.BgWhiteColor},
-		ASSASSIN + GUESSED:  {tablewriter.Normal, tablewriter.FgBlackColor, tablewriter.BgYellowColor},
+	defaultColor = text.Colors{text.FgWhite, text.BgBlack}
+	teamColor    = map[string]text.Colors{
+		RED:                 {text.FgRed, text.BgBlack},
+		BLUE:                {text.FgBlue, text.BgBlack},
+		BYSTANDER:           {text.FgWhite, text.BgBlack},
+		ASSASSIN:            {text.FgYellow, text.BgBlack},
+		RED + GUESSED:       {text.FgBlack, text.BgRed},
+		BLUE + GUESSED:      {text.FgBlack, text.BgBlue},
+		BYSTANDER + GUESSED: {text.FgBlack, text.BgWhite},
+		ASSASSIN + GUESSED:  {text.FgBlack, text.BgYellow},
 	}
 )
 
 func (g *gameBoard) WriteTable(w io.Writer, spyMasterView bool) {
-	tw := tablewriter.NewWriter(w)
-	tw.SetBorder(true)
-	tw.SetRowLine(true)
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
 
-	tw.SetAlignment(tablewriter.ALIGN_CENTER)
 	allCards := []string{}
 	for _, cards := range g.cards {
 		for c := range *cards {
@@ -89,31 +89,54 @@ func (g *gameBoard) WriteTable(w io.Writer, spyMasterView bool) {
 		}
 	}
 	sort.Strings(allCards)
-	allColors := []tablewriter.Colors{}
 	for i, c := range allCards {
 		guessed := g.guessedWords.Contains(c)
 		if guessed || spyMasterView {
-			team := g.teamForCard[c]
-			color := teamColor[team]
-
 			if guessed {
 				allCards[i] = strings.ToUpper(c)
-				color = teamColor[team+GUESSED]
 			}
-			allColors = append(allColors, color)
-
-		} else {
-			allColors = append(allColors, defaultColor)
 		}
 	}
+	cardTransformer := text.Transformer(func(c interface{}) string {
+		card := c.(string)
+		team := g.teamForCard[card]
+		guessed := g.guessedWords.Contains(card)
+		if guessed || spyMasterView {
+			return teamColor[team].Sprint(card)
+		}
+		return defaultColor.Sprint(card)
+	})
 
-	for row := 0; row < 5; row++ {
-		rowCards := allCards[row*5 : row*5+5]
-		rowColors := allColors[row*5 : row*5+5]
+	t.SetStyle(table.StyleLight)
+	t.Style().Options.SeparateHeader = true
+	t.Style().Options.SeparateRows = true
+	t.Style().Format.Header = text.FormatDefault
 
-		tw.Rich(rowCards, rowColors)
+	header := table.Row{}
+	columnConfigs := []table.ColumnConfig{}
+	for i := 0; i < 5; i++ {
+		card := allCards[i]
+		header = append(header, card)
+		columnConfigs = append(columnConfigs, table.ColumnConfig{
+			Name:              card,
+			Transformer:       cardTransformer,
+			TransformerHeader: cardTransformer,
+			Align:             text.AlignCenter,
+			AlignHeader:       text.AlignCenter,
+		})
 	}
-	tw.Render()
+	t.AppendHeader(header)
+	t.SetColumnConfigs(columnConfigs)
+
+	for row := 1; row < 5; row++ {
+		rowCards := allCards[row*5 : row*5+5]
+		row := table.Row{}
+		for _, card := range rowCards {
+			row = append(row, card)
+		}
+		t.AppendRow(row)
+	}
+	t.Render()
 }
 
 func (g *gameBoard) currentScore() map[string]int {
