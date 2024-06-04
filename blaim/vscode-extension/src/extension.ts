@@ -2,8 +2,8 @@ import * as vscode from "vscode";
 import ollama from "ollama";
 import { GenerateRequest } from "ollama";
 import type { GitExtension } from "./git";
-import { activateDecorators} from "./decorator";
-import {accepts, AcceptLogLine } from './acceptlog';
+import { activateDecorators } from "./decorator";
+import { logAcceptedSuggestion, AcceptLogLine } from "./acceptlog";
 
 const modelName = "codellama";
 const acceptSuggestCommand = "blaim.acceptSuggestion";
@@ -31,14 +31,11 @@ export function activate(context: vscode.ExtensionContext) {
   console.log("blaim-completion started");
   activateDecorators(context);
 
-  const acceptLogger = vscode.window.createOutputChannel(
-    "accepted.suggestions",
-    { log: true },
-  );
   console.log(
     `writing accepted suggestions logs: export ACCEPT_LOG=${context.logUri.path}/accepted.suggestions.log`,
   );
 
+  // This is the callback that VS Code invokes whenever the user *accepts* a suggestion.
   vscode.commands.registerCommand(acceptSuggestCommand, async (...args) => {
     const acceptEvent = args[0];
     const inferenceConfig = acceptEvent.inferenceConfig;
@@ -47,9 +44,12 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.extensions.getExtension<GitExtension>("vscode.git")?.exports;
     const git = gitExtension?.getAPI(1);
 
+    // Dig through the available repos to identify which one, if any,
+    // owns the file the user is currently editing.
     for (const repo of git?.repositories || []) {
       if (acceptEvent.fileName.indexOf(repo?.rootUri.path) === 0) {
         const headCommit = repo?.state.HEAD;
+
         const acceptLogLine: AcceptLogLine = {
           fileName: acceptEvent.fileName.substring(
             repo?.rootUri.path.length + 1,
@@ -59,10 +59,7 @@ export function activate(context: vscode.ExtensionContext) {
           headGitCommit: headCommit,
           inferenceConfig: inferenceConfig,
         };
-        acceptLogger.appendLine(
-          JSON.stringify(acceptLogLine),
-        );
-        accepts.push(acceptLogLine);
+        logAcceptedSuggestion(acceptLogLine);
       }
     }
   });
@@ -86,7 +83,7 @@ export function activate(context: vscode.ExtensionContext) {
       const response = await ollama.generate(req);
       const text = response.response;
       console.log("ollama.generate response text length:", text.length);
-      //console.log("position:", position);
+
       const ret: vscode.InlineCompletionList = {
         items: [
           {
