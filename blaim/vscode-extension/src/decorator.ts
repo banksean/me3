@@ -51,6 +51,13 @@ export function activateDecorators(context: vscode.ExtensionContext) {
 
 	let activeEditor = vscode.window.activeTextEditor;
 
+  function findFirstDiffPos(a:string, b:string) {
+    let i = 0;
+    if (a === b) return -1;
+    while (a[i] === b[i]) i++;
+    return i;
+  }
+
 	function updateDecorations() {
 		if (!activeEditor) {
 			return;
@@ -59,18 +66,29 @@ export function activateDecorators(context: vscode.ExtensionContext) {
 		const inlineDecorations: vscode.DecorationOptions[] = [];
     const gutterBlameAnnotations: vscode.DecorationOptions[] = [];
 
+    // Inline annotations
     for (let i =0; i<accepts.length; i++) {
       const acceptLine = accepts[i];
       if (activeEditor.document.fileName.indexOf(acceptLine.fileName) != -1) {
         const acceptedLines = acceptLine.text.split('\n');
         const endPos = new vscode.Position(acceptLine.position.line + acceptedLines.length, acceptedLines?.pop()?.length || 0);
+        const range = new vscode.Range(acceptLine.position, endPos);
+        const actualTextAfterEdits = activeEditor.document.getText(range);
+
+        const cutoff = findFirstDiffPos(actualTextAfterEdits, acceptLine.text);
+        const cutoffAcceptedText = acceptLine.text.substring(0, cutoff);
+        const cutoffAcceptedLines = cutoffAcceptedText.split('\n');
+        const cutoffEndPos = new vscode.Position(acceptLine.position.line + cutoffAcceptedLines.length, cutoffAcceptedLines?.pop()?.length || 0);
+        const cutoffRange = new vscode.Range(acceptLine.position, cutoffEndPos);
+
         const decoration:vscode.DecorationOptions = { 
-          range: new vscode.Range(acceptLine.position, endPos), 
+          range: cutoffRange, 
           hoverMessage: new vscode.MarkdownString("## This is AI-generated code:\n```" + JSON.stringify(acceptLine.inferenceConfig) + "```\n"  + `at ${JSON.stringify(acceptLine.position)}\n`+ "## Raw text from the model:\n```\n" + acceptLine.text + "\n```\n"),
         };
         inlineDecorations.push(decoration);
       }
     }
+
     // Line-by-line gutter annotations
     const textLines = text.split('\n');
     for (let lineNumber = 0; lineNumber < textLines.length; lineNumber++) {
