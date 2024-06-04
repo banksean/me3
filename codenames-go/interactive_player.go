@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/chzyer/readline"
 )
@@ -29,6 +30,14 @@ func (s *HumanSpyMasterTurn) Move(game *gameBoard) error {
 	if err != nil {
 		return err
 	}
+	if strings.HasPrefix(input, "/explain") {
+		team := s.team
+		if len(input) > len("/explain") {
+			team = strings.TrimSpace(input[len("/explain"):])
+		}
+		fmt.Printf("explanation: %s\n", game.explanation[team])
+		return nil
+	}
 
 	game.state = game.transitions[s.team+"CLUE"]
 	game.clue[s.team] = input
@@ -47,7 +56,9 @@ func (s *HumanFieldAgentTurn) Team() string {
 }
 
 func (s *HumanFieldAgentTurn) Move(game *gameBoard) error {
+	fmt.Printf("\n")
 	game.WriteTable(os.Stdout, false)
+	fmt.Printf("\n")
 	clue := game.clue[s.team]
 	fmt.Printf("%s team field agent: make a guess for %q\n> ", s.team, clue)
 	input, err := s.rl.Readline()
@@ -55,9 +66,20 @@ func (s *HumanFieldAgentTurn) Move(game *gameBoard) error {
 	if err != nil {
 		return err
 	}
+
+	if strings.HasPrefix(input, "/explain") {
+		team := s.team
+		if len(input) > len("/explain") {
+			team = strings.TrimSpace(input[len("/explain"):])
+		}
+		fmt.Printf("explanation: %s\n", game.explanation[team])
+		return nil
+	}
+
 	team, err := game.guess(input)
 	if err != nil {
-		return err
+		fmt.Printf("error: %s", err)
+		return nil
 	}
 	if team == s.team {
 		fmt.Printf("\nCORRECT ")
