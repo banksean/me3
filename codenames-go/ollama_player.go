@@ -25,7 +25,7 @@ In particular, DO NOT offer a clue that might suggest the word {{ .AssassinWord 
 Respond with a json object like this example:
 {
 	"clue": "shoe",
-	"target": "sock, fit", 
+	"target": "sock, fit",
 	"explanation": "The word 'shoe' is related to the words 'sock' and 'fit' from our word list because they both have to do with feet and none of the  words in THIER_CARDS are associated with shoes."
 }
 > `))
