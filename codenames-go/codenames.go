@@ -42,6 +42,7 @@ type gameBoard struct {
 	state        Player
 	transitions  map[string]Player
 	clue         map[string]string
+	explanation  map[string]string
 }
 
 type Team struct {
@@ -79,6 +80,7 @@ func (g *gameBoard) WriteTable(w io.Writer, spyMasterView bool) {
 	tw := tablewriter.NewWriter(w)
 	tw.SetBorder(true)
 	tw.SetRowLine(true)
+
 	tw.SetAlignment(tablewriter.ALIGN_CENTER)
 	allCards := []string{}
 	for _, cards := range g.cards {
@@ -166,6 +168,7 @@ func NewGameBoard(d []string) *gameBoard {
 		guessedWords: &guessed,
 		teamForCard:  make(map[string]string),
 		clue:         map[string]string{},
+		explanation:  map[string]string{},
 	}
 	game.cards[RED], d = draw(d, 8)
 	game.cards[BLUE], d = draw(d, 9)

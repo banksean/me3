@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"text/template"
 
@@ -13,15 +13,21 @@ import (
 
 var (
 	spyMasterPromptTmpl = template.Must(template.New("spymaster").Parse(
-		`Your task is to provide me with a single word clue to help me identify one of the words in the following list:
+		`Your task is to provide me with a single word clue to help me identify one of the target words in the following OUR_CARDS list:
 	{{range .OurWords }}{{. | printf "%q"}} {{end}}
-Your clue cannot be any of the words in that list.
-Your clue cannot be a slight variation of any of the words in that list.
-Your clue must NOT be associated with any of the words in the following list:
+Your clue cannot be any of the words in OUR_CARDS.
+Your clue cannot be a slight variation of any of the words in OUR_CARDS.
+Your clue should make me think of one of the words in OUR_CARDS.
+Your clue must NOT be associated with any of the words in the following THEIR_CARDS list:
 	{{range .NotOurWords }}{{. | printf "%q"}} {{end}}
+Your clue must not be any of the words in the THEIR_CARDS list.
 In particular, DO NOT offer a clue that might suggest the word {{ .AssassinWord | printf "%q" }}, because you will cause us to lose the game.
-Respond only with the single word clue.  
-Do not provide any explanation for why you chose the single word clue.
+Respond with a json object like this example:
+{
+	"clue": "shoe",
+	"target": "sock, fit", 
+	"explanation": "The word 'shoe' is related to the words 'sock' and 'fit' from our word list because they both have to do with feet and none of the  words in THIER_CARDS are associated with shoes."
+}
 > `))
 
 	fieldAgentPromptTmpl = template.Must(template.New("fieldagent").Parse(
@@ -31,8 +37,11 @@ Do not provide any explanation for why you chose the single word clue.
 	Your guess MUST BE one and only one word from the above list.
 	Do not guess a word that is not in that list.
 	Your guess MUST NOT BE the word {{.Clue | printf "%q"}}.
-	Respond only with the single word, lowercase, with no punctuation.
-	Do NOT respond with any text OTHER THAN THAT ONE WORD.
+	Respond with a json object like this example:
+	{
+		"guess": "sock",
+		"explanation": "Based on the clue word 'shoe', the word 'sock' seems like the best match because those two objects are frequently used together and none of the other cards are associated with the word 'sock'."
+	}
 	> `))
 )
 
@@ -65,9 +74,14 @@ func (s *OLlamaSpyMasterTurn) Team() string {
 	return s.team
 }
 
-func (s *OLlamaSpyMasterTurn) Move(game *gameBoard) error {
-	game.WriteTable(os.Stdout, true)
+type SpyMasterResponse struct {
+	Clue        string `json:"clue"`
+	Target      string `json:"target"`
+	Explanation string `json:"explanation"`
+}
 
+func (s *OLlamaSpyMasterTurn) Move(game *gameBoard) error {
+	fmt.Printf("%s team (%s) SpyMaster is thinking of a clue...\n", s.team, s.model)
 	ourRemainingWords := game.cards[s.team].Clone()
 	ourRemainingWords.Remove(*game.guessedWords)
 
@@ -95,6 +109,7 @@ func (s *OLlamaSpyMasterTurn) Move(game *gameBoard) error {
 	request := ollama.GenerateRequest{
 		Model:   s.model,
 		Prompt:  prompt.String(),
+		Format:  "json",
 		Context: []int{},
 		Stream:  &streaming,
 	}
@@ -109,10 +124,19 @@ func (s *OLlamaSpyMasterTurn) Move(game *gameBoard) error {
 		return err
 	}
 
+	spyMasterResponse := &SpyMasterResponse{}
+	err = json.Unmarshal([]byte(input), spyMasterResponse)
+	if err != nil {
+		return err
+	}
 	input = strings.ToLower(input)
 	game.state = game.transitions[s.team+"CLUE"]
-	fmt.Printf("%s team (%s) SpyMaster's clue: %q\n", s.team, s.model, input)
-	game.clue[s.team] = input
+	clue := spyMasterResponse.Clue
+	explanation := spyMasterResponse.Explanation
+
+	fmt.Printf("%s team (%s) SpyMaster's clue: %q\n", s.team, s.model, clue)
+	game.clue[s.team] = clue
+	game.explanation[s.team] = fmt.Sprintf("[%s] %s", spyMasterResponse.Target, explanation)
 	return nil
 }
 
@@ -145,6 +169,11 @@ func (s *OLlamaFieldAgentTurn) Team() string {
 	return s.team
 }
 
+type FieldAgentResponse struct {
+	Guess       string `json:"guess"`
+	Explanation string `json:"explanation"`
+}
+
 func (s *OLlamaFieldAgentTurn) Move(game *gameBoard) error {
 	var err error
 	for errRetries := 3; errRetries > 0; errRetries-- {
@@ -169,6 +198,7 @@ func (s *OLlamaFieldAgentTurn) Move(game *gameBoard) error {
 		request := ollama.GenerateRequest{
 			Model:   s.model,
 			Prompt:  prompt.String(),
+			Format:  "json",
 			Context: []int{},
 			Stream:  &streaming,
 		}
@@ -182,9 +212,16 @@ func (s *OLlamaFieldAgentTurn) Move(game *gameBoard) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%s team (%s) FieldAgent guessed %q based on the clue %q\n", s.team, s.model, input, clue)
+
+		fieldAgentResponse := &FieldAgentResponse{}
+		err = json.Unmarshal([]byte(input), fieldAgentResponse)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("%s team (%s) FieldAgent guessed %q based on the clue %q\n", s.team, s.model, fieldAgentResponse.Guess, clue)
 		team := ""
-		team, err = game.guess(input)
+		team, err = game.guess(fieldAgentResponse.Guess)
 		if err != nil {
 			fmt.Printf("\tError during guess: %v\n", err)
 			continue
@@ -195,8 +232,9 @@ func (s *OLlamaFieldAgentTurn) Move(game *gameBoard) error {
 		} else {
 			fmt.Printf("\tINCORRECT: ")
 		}
-		fmt.Printf("\t%q belongs to team %s\n", input, team)
+		fmt.Printf("\t%q belongs to team %s\n", fieldAgentResponse.Guess, team)
 		game.state = game.transitions[s.team+"GUESS"]
+		game.explanation[s.team] = fieldAgentResponse.Explanation
 		break
 	}
 	return err
