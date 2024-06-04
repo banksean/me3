@@ -24,14 +24,18 @@
   "contributes": {
     "commands": [
       {
-        "command": "extension.inline-completion-settings",
+        "command": "blaim-completion.inline-completion-settings",
         "title": "blAIm Inline Completion Settings"
+      },
+      {
+        "command": "blaim-completion.toggleGutter",
+        "title": "Blaim: Toggle Gutters"
       }
     ],
     "menus": {
       "editor/inlineCompletions/actions": [
         {
-          "command": "extension.inline-completion-settings"
+          "command": "blaim-completion.inline-completion-settings"
         }
       ]
     }

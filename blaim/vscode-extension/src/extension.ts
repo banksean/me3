@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import ollama from "ollama";
 import { GenerateRequest } from "ollama";
 import type { GitExtension } from "./git";
+import { activateDecorators } from "./decorator";
 
 const modelName = "codellama";
 const acceptSuggestCommand = "blaim.acceptSuggestion";
@@ -27,6 +28,8 @@ function formatPrompt(prefix: string, suffix: string) {
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("blaim-completion started");
+  activateDecorators(context);
+  
   const acceptLogger = vscode.window.createOutputChannel(
     "accepted.suggestions",
     { log: true },
