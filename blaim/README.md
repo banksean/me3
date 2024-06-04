@@ -8,6 +8,20 @@ This project is an attempt to automatically separate the human-generated portion
 
 The name `blaim` is a play on `git blame`, with the spelling altered to emphasize the role of AI.
 
+## TL;DR
+
+Here are some screenshots of how code that's been annotated this way might be rendered in an IDE.
+
+With annotation highlighting enabled via a VS Code extension, the machine-generated ranges of text have a green background, while hand-entered ranges have the default text style:
+
+![image](./screenshots/blaim-hilight1.png)
+
+On hover, each distinct range can display metadata about the generated text range. Metadata for the first green range in this example:
+![image](./screenshots/blaim-hilight2.png)
+
+Metadata for the second green range in this example:
+![image](./screenshots/blaim-hilight3.png)
+
 ## Why
 
 Some reasons why you might want to keep track of AI-generated code in your repo:
