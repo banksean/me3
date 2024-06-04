@@ -1,5 +1,7 @@
 // This is a playground for testing generative code suggestion logging.
 
+const { notDeepEqual } = require("assert");
+
 // Here's a different change, also hand-written.
 
 function fibonacci(n) {
@@ -49,10 +51,28 @@ function testSomethingElse2() {
   //console.log("something else 2");
 }
 
-// This is hand-written:
 // This is hand-written for real though.
 function testSomethingElse3() {
   //
 }
 
-// And nothis is 
+let a = 123;
+
+function fibonacci(n) {
+  if (n < 2) {
+    return n;
+  } else {
+    return fibonacci(n - 1) + fibonacci(n - 2);
+  }
+}
+
+function fibonacci(n) {
+  if (n < 2) {
+    return n;
+  } else {
+   return fibonacci(n - 1) + fibonacci(n - 2);
+  }
+}
+
+
+

@@ -34,6 +34,7 @@ export function activateDecorators(context: vscode.ExtensionContext) {
 
   const inlineDecorationType = vscode.window.createTextEditorDecorationType({
     rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+    textDecoration: 'opacity:0.5',
     overviewRulerColor: 'blue',
     overviewRulerLane: vscode.OverviewRulerLane.Right,
     light: {
@@ -45,7 +46,7 @@ export function activateDecorators(context: vscode.ExtensionContext) {
         //borderRadius: '8px',
         // this color will be used in dark color themes
         //borderColor: 'lightblue'
-        backgroundColor: 'midnightblue'
+        backgroundColor: 'darkgreen'
     }
   });
 
@@ -55,6 +56,7 @@ export function activateDecorators(context: vscode.ExtensionContext) {
     let i = 0;
     if (a === b) return -1;
     while (a[i] === b[i]) i++;
+    //console.log('findFirstDiffPos', a, b, i);
     return i;
   }
 
@@ -66,7 +68,8 @@ export function activateDecorators(context: vscode.ExtensionContext) {
 		const inlineDecorations: vscode.DecorationOptions[] = [];
     const gutterBlameAnnotations: vscode.DecorationOptions[] = [];
 
-    // Inline annotations
+    // Inline annotations to hilight ranges of AI-generated code.
+    // This is currently very broken and does not work well at all.
     for (let i =0; i<accepts.length; i++) {
       const acceptLine = accepts[i];
       if (activeEditor.document.fileName.indexOf(acceptLine.fileName) != -1) {
@@ -76,10 +79,15 @@ export function activateDecorators(context: vscode.ExtensionContext) {
         const actualTextAfterEdits = activeEditor.document.getText(range);
 
         const cutoff = findFirstDiffPos(actualTextAfterEdits, acceptLine.text);
-        const cutoffAcceptedText = acceptLine.text.substring(0, cutoff);
+        const cutoffAcceptedText = actualTextAfterEdits.substring(0, cutoff);
         const cutoffAcceptedLines = cutoffAcceptedText.split('\n');
-        const cutoffEndPos = new vscode.Position(acceptLine.position.line + cutoffAcceptedLines.length, cutoffAcceptedLines?.pop()?.length || 0);
+        const cutoffEndPos = new vscode.Position(acceptLine.position.line + cutoffAcceptedLines.length -1, cutoffAcceptedLines?.pop()?.length || 0);
         const cutoffRange = new vscode.Range(acceptLine.position, cutoffEndPos);
+        console.log('      range', range.start, range.end);
+        console.log('cutoffRange', cutoffRange.start, cutoffRange.end);
+        console.log('acceptLine.text', acceptLine.text);
+        console.log('actuaTextAfterEdits: ', actualTextAfterEdits);
+        console.log('cutoffAcceptedText:', cutoffAcceptedText);
 
         const decoration:vscode.DecorationOptions = { 
           range: cutoffRange, 
@@ -105,6 +113,7 @@ export function activateDecorators(context: vscode.ExtensionContext) {
       gutterBlameAnnotations.push(gutterAnnotation);
 		}
     
+    activeEditor.setDecorations(inlineDecorationType, []);
 		activeEditor.setDecorations(inlineDecorationType, inlineDecorations);
     //    activeEditor.setDecorations(gutterBlameAnnotationType, gutterBlameAnnotations);
 	}

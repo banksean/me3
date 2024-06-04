@@ -86,7 +86,7 @@ export function activate(context: vscode.ExtensionContext) {
       const response = await ollama.generate(req);
       const text = response.response;
       console.log("ollama.generate response text length:", text.length);
-      console.log("position:", position);
+      //console.log("position:", position);
       const ret: vscode.InlineCompletionList = {
         items: [
           {
@@ -118,7 +118,7 @@ export function activate(context: vscode.ExtensionContext) {
     handleDidShowCompletionItem(
       completionItem: vscode.InlineCompletionItem,
     ): void {
-      console.log("handleDidShowCompletionItem", completionItem);
+      //console.log("handleDidShowCompletionItem", completionItem);
     },
 
     /**
@@ -131,11 +131,11 @@ export function activate(context: vscode.ExtensionContext) {
       completionItem: vscode.InlineCompletionItem,
       info: any,
     ): void {
-      console.log(
-        "handleDidPartiallyAcceptCompletionItem",
-        completionItem,
-        info,
-      );
+      // console.log(
+      //   "handleDidPartiallyAcceptCompletionItem",
+      //   completionItem,
+      //   info,
+      // );
     },
   };
   vscode.languages.registerInlineCompletionItemProvider(
