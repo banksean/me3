@@ -62,13 +62,6 @@ export function activateDecorators(context: vscode.ExtensionContext) {
 
   let activeEditor = vscode.window.activeTextEditor;
 
-  function findFirstDiffPos(a: string, b: string) {
-    let i = 0;
-    if (a === b) return -1;
-    while (a[i] === b[i]) i++;
-    return i;
-  }
-
   function updateDecorations() {
     if (!activeEditor) {
       return;
