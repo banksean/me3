@@ -16,8 +16,8 @@ const acceptLogger = vscode.window.createOutputChannel("accepted.suggestions", {
 
 export function logAcceptedSuggestion(logLine: AcceptLogLine) {
   acceptLogger.appendLine(JSON.stringify(logLine));
-
   accepts.push(logLine);
+  console.log("accepts so far: ", accepts.length);
 }
 
 export function getAcceptedSuggestionsForFile(path: string): AcceptLogLine[] {

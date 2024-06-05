@@ -1,11 +1,13 @@
 import * as vscode from "vscode";
 import ollama from "ollama";
+import { AsyncLock } from "./asynclock";
+
 import { GenerateRequest } from "ollama";
 import type { GitExtension } from "./git";
 import { activateDecorators } from "./decorator";
 import { logAcceptedSuggestion, AcceptLogLine } from "./acceptlog";
 
-const modelName = "codellama";
+const modelName = "codegemma";
 const acceptSuggestCommand = "blaim.acceptSuggestion";
 
 function getPromptData(
@@ -20,12 +22,27 @@ function getPromptData(
   return { prefix, suffix };
 }
 
-function formatPrompt(prefix: string, suffix: string) {
+// The format for the prompt varies from model to model.
+// TODO: clean this up so it uses a config type that abstracts out
+// the model name, prompt format, temperature, number of tokens etc.
+function formatPrompt(model: string, prefix: string, suffix: string) {
+  if (model === "codellama") {
+    return {
+      prompt: `<PRE> ${prefix} <SUF> ${suffix} <MID>`,
+      stop: [`<END>`, `<EOD>`, `<EOT>`],
+    };
+  } else if (model === "codegemma") {
+    return {
+      prompt: `<|fim_prefix|>${prefix}<|fim_suffix|>${suffix}<|fim_middle|>`,
+      stop: ["<|file_separator|>"],
+    };
+  }
   return {
-    prompt: `<PRE> ${prefix} <SUF> ${suffix} <MID>`,
-    stop: [`<END>`, `<EOD>`, `<EOT>`],
+    prompt: prefix,
   };
 }
+
+const lock = new AsyncLock();
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("blaim-completion started");
@@ -66,50 +83,64 @@ export function activate(context: vscode.ExtensionContext) {
 
   const provider: vscode.InlineCompletionItemProvider = {
     async provideInlineCompletionItems(document, position, context, token) {
-      const promptData = getPromptData(document, position);
-      const prompt = formatPrompt(promptData.prefix, promptData.suffix);
-      const req: GenerateRequest & { stream: false } = {
-        model: modelName,
-        prompt: prompt.prompt,
-        raw: true,
-        stream: false,
-        options: {
-          stop: prompt.stop,
-          num_predict: 20,
-          temperature: 0.2,
-        },
-      };
-      console.log("sending ollama.generate request...");
-      const response = await ollama.generate(req);
-      const text = response.response;
-      console.log("ollama.generate response text length:", text.length);
+      if (token.isCancellationRequested) {
+        console.log(`Canceled before AI completion.`);
+        return;
+      }
+      return await lock.inLock(async () => {
+        if (token.isCancellationRequested) {
+          console.log(`Canceled before AI completion (inside lock).`);
+          return;
+        }
 
-      const ret: vscode.InlineCompletionList = {
-        items: [
-          {
-            insertText: text,
-            range: new vscode.Range(position, position),
-            command: {
-              title: "Accept Llama suggestion",
-              command: acceptSuggestCommand,
-              arguments: [
-                {
-                  fileName: document.fileName,
-                  fileVersionNumber: document.version,
-                  position: position,
-                  text: text,
-                  inferenceConfig: {
-                    modelName: req.model,
-                    temperature: req.options?.temperature,
-                    maxTokens: req.options?.num_predict,
-                  },
-                },
-              ],
-            },
+        const promptData = getPromptData(document, position);
+        const prompt = formatPrompt(
+          modelName,
+          promptData.prefix,
+          promptData.suffix,
+        );
+        const req: GenerateRequest & { stream: false } = {
+          model: modelName,
+          prompt: prompt.prompt,
+          raw: true,
+          stream: false,
+          options: {
+            stop: prompt.stop,
+            num_predict: 20,
+            temperature: 0.2,
           },
-        ],
-      };
-      return ret;
+        };
+        console.log("sending ollama.generate request...");
+        const response = await ollama.generate(req);
+        const text = response.response;
+        console.log("ollama.generate response text length:", text.length);
+        const ret: vscode.InlineCompletionList = {
+          items: [
+            {
+              insertText: text,
+              range: new vscode.Range(position, position),
+              command: {
+                title: "Accept generated code suggestion",
+                command: acceptSuggestCommand,
+                arguments: [
+                  {
+                    fileName: document.fileName,
+                    fileVersionNumber: document.version,
+                    position: position,
+                    text: text,
+                    inferenceConfig: {
+                      modelName: req.model,
+                      temperature: req.options?.temperature,
+                      maxTokens: req.options?.num_predict,
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        };
+        return ret;
+      });
     },
 
     handleDidShowCompletionItem(
