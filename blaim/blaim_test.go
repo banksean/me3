@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestParseLine(t *testing.T) {
+func TestParseAcceptLogLine(t *testing.T) {
 
 	for _, test := range []struct {
 		logLine       string
@@ -38,7 +38,7 @@ func TestParseLine(t *testing.T) {
 			},
 		},
 	} {
-		got, err := ParseLogLine(test.logLine)
+		got, err := ParseAcceptLogLine(test.logLine)
 		if !reflect.DeepEqual(test.expected, got) {
 			t.Errorf("expected %v, got %v\n", test.expected, got)
 		}

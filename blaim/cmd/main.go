@@ -16,20 +16,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// BlaimLine represents an entry in a .blaim file.
-type BlaimLine struct {
-	// Filename is the path of a file that contains an AI-generated code suggestion.
-	Filename string `json:"filename"`
-	// Position identifies the line number and starting character of where
-	// the generated code was inserted.
-	Position blaim.Position `json:"position"`
-	// Text is the raw text of the AI-generated code suggestion.
-	Text string `json:"text"`
-	// InferenceConfig describes the request sent to the code-generating model,
-	// (e.g. the name of the model, temperature etc).
-	InferenceConfig blaim.InferenceConfig `json:"inference_config"`
-}
-
 // processAcceptedSuggestionsLog parses the contents of a "accepted.suggestions.log" file
 // which the VS Code extension has been writing entries to as the user has edited
 // code and accepted AI-generated suggestions.
@@ -42,7 +28,7 @@ func processAcceptedSuggestionsLog(in io.Reader) (map[string][]*blaim.AcceptLogL
 	}
 	lines := strings.Split(string(b), "\n")
 	for _, line := range lines {
-		parsed, err := blaim.ParseLogLine(line)
+		parsed, err := blaim.ParseAcceptLogLine(line)
 		if err != nil {
 			return nil, fmt.Errorf("error: %v", err)
 		}
@@ -104,7 +90,7 @@ func generate(logReader io.Reader) error {
 		if newName != origName {
 			accepts = append(accepts, acceptsForFile[newName]...)
 		}
-		blaimLines := []BlaimLine{}
+		blaimLines := []blaim.BlaimLine{}
 
 		// Now check each "hunk" in the diff'd file to see if there are any
 		// entries in the .blaim file about it.
@@ -117,11 +103,14 @@ func generate(logReader io.Reader) error {
 				}
 				lineOffset := len(strings.Split(addedInDiffHunk[:idx], "\n"))
 
-				blaimLine := BlaimLine{
+				blaimLine := blaim.BlaimLine{
 					Filename: accept.FileName,
-					Position: blaim.Position{
-						Line:      lineOffset + addsStart + int(hunk.NewStartLine),
-						Character: idx,
+					Range: blaim.Range{
+						Start: blaim.Position{
+							Line:      lineOffset + addsStart + int(hunk.NewStartLine),
+							Character: idx,
+						},
+						// TODO: figure out the End position.
 					},
 					Text:            accept.Text,
 					InferenceConfig: accept.InferenceConfig,
@@ -144,12 +133,12 @@ func generate(logReader io.Reader) error {
 
 // Represents the set of blaim lines and ranges for a particular source file.
 type BlaimRangeSet struct {
-	blaimLines []*BlaimLine
+	blaimLines []*blaim.BlaimLine
 }
 
 // ForSourceLine returns the BlaimLines that cover that line of the source file.
-func (s *BlaimRangeSet) ForSourceLine(lineNumber int) []*BlaimLine {
-	ret := []*BlaimLine{}
+func (s *BlaimRangeSet) ForSourceLine(lineNumber int) []*blaim.BlaimLine {
+	ret := []*blaim.BlaimLine{}
 	// This problem is straight out of a coding interview question:
 	//   "Given a list of ranges (start, end), write a function that returns true
 	//   if a particular value falls within any of the ranges."
@@ -157,15 +146,15 @@ func (s *BlaimRangeSet) ForSourceLine(lineNumber int) []*BlaimLine {
 	// wants to see, but it's sufficient for this PoC:
 	for _, blaimLine := range s.blaimLines {
 		textLines := strings.Split(blaimLine.Text, "\n")
-		if lineNumber >= blaimLine.Position.Line &&
-			lineNumber <= blaimLine.Position.Line+len(textLines) {
+		if lineNumber >= blaimLine.Range.Start.Line &&
+			lineNumber <= blaimLine.Range.Start.Line+len(textLines) {
 			ret = append(ret, blaimLine)
 		}
 	}
 	return ret
 }
 
-func formatAnnotationLinePrefix(line *BlaimLine) string {
+func formatAnnotationLinePrefix(line *blaim.BlaimLine) string {
 	return fmt.Sprintf("[%s, temp: %.1f] ", line.InferenceConfig.ModelName, line.InferenceConfig.Temperature)
 }
 
@@ -175,7 +164,7 @@ func formatAnnotationLinePrefix(line *BlaimLine) string {
 func annotate() error {
 	reader := os.Stdin
 	um := json.NewDecoder(reader)
-	blaimLines := []*BlaimLine{}
+	blaimLines := []*blaim.BlaimLine{}
 	for {
 		err := um.Decode(&blaimLines)
 		if err == io.EOF {
@@ -185,14 +174,14 @@ func annotate() error {
 			os.Exit(1)
 		}
 	}
-	blaimLinesByFile := map[string][]*BlaimLine{}
+	blaimLinesByFile := map[string][]*blaim.BlaimLine{}
 
 	longestLinePrefixLen := -1
 
 	// Group the blaim lines by the source file path they refer to.
 	for _, blaimLine := range blaimLines {
 		if _, ok := blaimLinesByFile[blaimLine.Filename]; !ok {
-			blaimLinesByFile[blaimLine.Filename] = []*BlaimLine{}
+			blaimLinesByFile[blaimLine.Filename] = []*blaim.BlaimLine{}
 		}
 		blaimLinesByFile[blaimLine.Filename] = append(blaimLinesByFile[blaimLine.Filename], blaimLine)
 		linePrefix := formatAnnotationLinePrefix(blaimLine)

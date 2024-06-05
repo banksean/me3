@@ -5,9 +5,32 @@ import (
 	"strings"
 )
 
+// BlaimLine represents an entry in a .blaim file.
+// Each entry describes a single range of text in
+// a named source code file.  The description of the
+// text range includes information about how the text
+// range was generated (e.g. name of the model, inference
+// request parameters etc.)
+type BlaimLine struct {
+	// Filename is the path of a file that contains an AI-generated code suggestion.
+	Filename string `json:"filename"`
+	// Range specifies the start and end position of the inserted text.
+	Range Range `json:"range"`
+	// Text is the raw text of the AI-generated code suggestion.
+	Text string `json:"text"`
+	// InferenceConfig describes the request sent to the code-generating model,
+	// (e.g. the name of the model, temperature etc).
+	InferenceConfig InferenceConfig `json:"inference_config"`
+}
+
 type Position struct {
 	Line      int `json:"line"`
 	Character int `json:"character"`
+}
+
+type Range struct {
+	Start Position `json:"start"`
+	End   Position `json:"end"`
 }
 
 type GitCommit struct {
@@ -36,10 +59,12 @@ type AcceptLogLine struct {
 	InferenceConfig InferenceConfig
 }
 
-func ParseLogLine(logLine string) (*AcceptLogLine, error) {
+func ParseAcceptLogLine(logLine string) (*AcceptLogLine, error) {
 	jsonStart := strings.Index(logLine, "] ")
 	if jsonStart == -1 {
-		return nil, nil //fmt.Errorf("couldn't find the start of json data in %q", logLine)
+		// Not an error condition, since the vs code extension logs can contain any arbitrary string.
+		// We just ignore anything that doesn't parse like we expect.
+		return nil, nil
 	}
 	jsonText := logLine[jsonStart+2:]
 	line := &AcceptLogLine{}
