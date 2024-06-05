@@ -83,68 +83,93 @@ export function activateDecorators(context: vscode.ExtensionContext) {
 
       // At this point, we have the originally logged suggestion text
       // and the position where it was inserted in the original file.
-      // However, this is not enough information to let use higlight the
-      // *current* location of the suggestion in the file, if it is still
-      // there at all.
+      //
+      // However, this is not enough information to let us higlight the
+      // *current* location of the suggested text in the file, if it is still
+      // there at all. For instance:
       // - The user may accept a suggestion, and subsequently edit or remove
       //   the inserted text altogether.
-      // - The user may accept a suggestion, and then make edits at some
-      //   location at a previous line in the file, such that the logged
-      // . location of the inserted suggestion is no longer accurate.
-      // So, we first get the current text that exists at the location of the
-      // logged accept and compare that text to the text of the logged
-      // accept.  If they differ, then we need to adjust the range parameters
-      // such that the reflect the current state of the file.
+      // - The user may accept a suggestion, and then make edits inserting new
+      //   lines at a previous line in the file, such that the logged
+      // . line number of the inserted text is no longer accurate.
+      //
+      // This code does nothing fancy to find fuzzy matches etc.  It looks
+      // for an exact match at the original location, and as a fallback it
+      // looks for exact matches at other locations in the document.
+
+      // Look for exact matches of the accepted text at the original location:
       const actualTextAfterEdits = activeEditor.document.getText(range);
+      if (actualTextAfterEdits == acceptLine.text) {
+        const decoration: vscode.DecorationOptions = {
+          range: range,
+          hoverMessage: new vscode.MarkdownString(
+            "## This is AI-generated code:\n```" +
+              JSON.stringify(acceptLine.inferenceConfig) +
+              "```\n" +
+              `originally at ${JSON.stringify(acceptLine.position)}\n` +
+              "## Raw text from the model:\n```\n" +
+              acceptLine.text +
+              "\n```\n",
+          ),
+        };
+        inlineDecorations.push(decoration);
+      } else {
+        // If we didn't the exact text at the original location, try this as a back-up:
+        // Look for exact matches of the accepted text at other locations in the file:
+        let acceptTextIndexInDoc = activeEditor.document
+          .getText()
+          .indexOf(acceptLine.text);
+        const ranges: vscode.Range[] = [];
+        while (acceptTextIndexInDoc != -1) {
+          ranges.push(
+            new vscode.Range(
+              activeEditor.document.positionAt(acceptTextIndexInDoc),
+              activeEditor.document.positionAt(
+                acceptTextIndexInDoc + acceptLine.text.length,
+              ),
+            ),
+          );
+          acceptTextIndexInDoc = activeEditor.document
+            .getText()
+            .indexOf(acceptLine.text, acceptTextIndexInDoc + 1);
+        }
+        for (let i = 0; i < ranges.length; i++) {
+          const decoration: vscode.DecorationOptions = {
+            range: ranges[i],
+            hoverMessage: new vscode.MarkdownString(
+              "## This is AI-generated code:\n```" +
+                JSON.stringify(acceptLine.inferenceConfig) +
+                "```\n" +
+                `originally at ${JSON.stringify(acceptLine.position)}\n` +
+                "## Raw text from the model:\n```\n" +
+                acceptLine.text +
+                "\n```\n",
+            ),
+          };
+          inlineDecorations.push(decoration);
+        }
+      }
 
-      const cutoff = findFirstDiffPos(actualTextAfterEdits, acceptLine.text);
-      const cutoffAcceptedText = actualTextAfterEdits.substring(0, cutoff);
-      const cutoffAcceptedLines = cutoffAcceptedText.split("\n");
-      const cutoffEndPos = new vscode.Position(
-        acceptLine.position.line + cutoffAcceptedLines.length - 1,
-        cutoffAcceptedLines?.pop()?.length || 0,
-      );
-      const cutoffRange = new vscode.Range(acceptLine.position, cutoffEndPos);
-      console.log("      range", range.start, range.end);
-      console.log("cutoffRange", cutoffRange.start, cutoffRange.end);
-      console.log("acceptLine.text", acceptLine.text);
-      console.log("actuaTextAfterEdits: ", actualTextAfterEdits);
-      console.log("cutoffAcceptedText:", cutoffAcceptedText);
-
-      const decoration: vscode.DecorationOptions = {
-        range: cutoffRange,
-        hoverMessage: new vscode.MarkdownString(
-          "## This is AI-generated code:\n```" +
-            JSON.stringify(acceptLine.inferenceConfig) +
-            "```\n" +
-            `at ${JSON.stringify(acceptLine.position)}\n` +
-            "## Raw text from the model:\n```\n" +
-            acceptLine.text +
-            "\n```\n",
-        ),
-      };
-      inlineDecorations.push(decoration);
-    }
-
-    // Line-by-line gutter annotations
-    const textLines = text.split("\n");
-    for (let lineNumber = 0; lineNumber < textLines.length; lineNumber++) {
-      const linePos = new vscode.Position(lineNumber, 0);
-      const gutterAnnotation: vscode.DecorationOptions = {
-        range: new vscode.Range(linePos, linePos),
-        //hoverMessage: 'blaim hover message',
-        renderOptions: {
-          before: {
-            contentText: `blaim line ${lineNumber}`,
+      // Line-by-line gutter annotations
+      const textLines = text.split("\n");
+      for (let lineNumber = 0; lineNumber < textLines.length; lineNumber++) {
+        const linePos = new vscode.Position(lineNumber, 0);
+        const gutterAnnotation: vscode.DecorationOptions = {
+          range: new vscode.Range(linePos, linePos),
+          //hoverMessage: 'blaim hover message',
+          renderOptions: {
+            before: {
+              contentText: `blaim line ${lineNumber}`,
+            },
           },
-        },
-      };
-      gutterBlameAnnotations.push(gutterAnnotation);
-    }
+        };
+        gutterBlameAnnotations.push(gutterAnnotation);
+      }
 
-    activeEditor.setDecorations(inlineDecorationType, []);
-    activeEditor.setDecorations(inlineDecorationType, inlineDecorations);
-    //    activeEditor.setDecorations(gutterBlameAnnotationType, gutterBlameAnnotations);
+      activeEditor.setDecorations(inlineDecorationType, []);
+      activeEditor.setDecorations(inlineDecorationType, inlineDecorations);
+      //    activeEditor.setDecorations(gutterBlameAnnotationType, gutterBlameAnnotations);
+    }
   }
 
   function triggerUpdateDecorations(throttle = false) {
