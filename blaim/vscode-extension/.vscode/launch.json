@@ -12,8 +12,9 @@
       //			"runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
+        "--workspaceFolder=${workspaceFolder}/../../blaim-playground",
         "--enable-proposed-api=banksean.blaim-completion",
-        "${workspaceFolder}/playground.js",
+        //"${workspaceFolder}/../../blaim-playground/playground.js",
         "--disable-extensions"
       ],
       "outFiles": ["${workspaceFolder}/out/**/*.js"],

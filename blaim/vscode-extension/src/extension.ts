@@ -5,7 +5,7 @@ import { AsyncLock } from "./asynclock";
 import { GenerateRequest } from "ollama";
 import type { GitExtension } from "./git";
 import { activateDecorators } from "./decorator";
-import { logAcceptedSuggestion, AcceptLogLine } from "./acceptlog";
+import { logAcceptedSuggestion, addAcceptsFromBlaimFile, AcceptLogLine } from "./acceptlog";
 
 const modelName = "codegemma";
 const acceptSuggestCommand = "blaim.acceptSuggestion";
@@ -44,8 +44,19 @@ function formatPrompt(model: string, prefix: string, suffix: string) {
 
 const lock = new AsyncLock();
 
+export async function loadBlaimFile(context: vscode.ExtensionContext) {
+  console.log('attempting to read .blaim file');
+  for (const ws of vscode.workspace.workspaceFolders || []) {
+    const blaimContents = await vscode.workspace.fs.readFile(vscode.Uri.file(ws.uri.fsPath+'/.blaim'));
+    const blaimJsonStr = new TextDecoder().decode(blaimContents);
+    addAcceptsFromBlaimFile(JSON.parse(blaimJsonStr));
+    console.log('read .blaim file');
+  }
+}
+
 export function activate(context: vscode.ExtensionContext) {
   console.log("blaim-completion started");
+  loadBlaimFile(context);
   activateDecorators(context);
 
   console.log(
