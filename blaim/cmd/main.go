@@ -104,7 +104,7 @@ func generate(logReader io.Reader) error {
 				lineOffset := len(strings.Split(addedInDiffHunk[:idx], "\n"))
 
 				blaimLine := blaim.BlaimLine{
-					Filename: accept.FileName,
+					FileName: accept.FileName,
 					Range: blaim.Range{
 						Start: blaim.Position{
 							Line:      lineOffset + addsStart + int(hunk.NewStartLine),
@@ -180,10 +180,10 @@ func annotate() error {
 
 	// Group the blaim lines by the source file path they refer to.
 	for _, blaimLine := range blaimLines {
-		if _, ok := blaimLinesByFile[blaimLine.Filename]; !ok {
-			blaimLinesByFile[blaimLine.Filename] = []*blaim.BlaimLine{}
+		if _, ok := blaimLinesByFile[blaimLine.FileName]; !ok {
+			blaimLinesByFile[blaimLine.FileName] = []*blaim.BlaimLine{}
 		}
-		blaimLinesByFile[blaimLine.Filename] = append(blaimLinesByFile[blaimLine.Filename], blaimLine)
+		blaimLinesByFile[blaimLine.FileName] = append(blaimLinesByFile[blaimLine.FileName], blaimLine)
 		linePrefix := formatAnnotationLinePrefix(blaimLine)
 		if len(linePrefix) > longestLinePrefixLen {
 			longestLinePrefixLen = len(linePrefix)

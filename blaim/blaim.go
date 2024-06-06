@@ -12,8 +12,8 @@ import (
 // range was generated (e.g. name of the model, inference
 // request parameters etc.)
 type BlaimLine struct {
-	// Filename is the path of a file that contains an AI-generated code suggestion.
-	Filename string `json:"filename"`
+	// FileName is the path of a file that contains an AI-generated code suggestion.
+	FileName string `json:"fileName"`
 	// Range specifies the start and end position of the inserted text.
 	Range Range `json:"range"`
 	// Text is the raw text of the AI-generated code suggestion.
