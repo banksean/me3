@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { getAcceptedSuggestionsForFile, AcceptLogLine } from "./acceptlog";
+import { getAcceptedSuggestionsForFile } from "./acceptlog";
 
 const MIN_PARTIAL_MATCH_SIZE = 8;
 
@@ -75,6 +75,7 @@ export function activateDecorators(context: vscode.ExtensionContext) {
     const accepts = getAcceptedSuggestionsForFile(
       activeEditor.document.fileName,
     );
+
     for (let i = 0; i < accepts.length; i++) {
       const acceptLine = accepts[i];
       const acceptedLines = acceptLine.text.split("\n");
@@ -196,6 +197,7 @@ export function activateDecorators(context: vscode.ExtensionContext) {
 
       // Clear any existing decorations.
       activeEditor.setDecorations(inlineDecorationType, []);
+
       activeEditor.setDecorations(inlineDecorationType, inlineDecorations);
     }
   }
@@ -215,6 +217,14 @@ export function activateDecorators(context: vscode.ExtensionContext) {
   if (activeEditor) {
     triggerUpdateDecorations();
   }
+
+  vscode.workspace.onDidOpenTextDocument(
+    (textDoc) => {
+        triggerUpdateDecorations();
+    },
+    null,
+    context.subscriptions,
+  );
 
   vscode.window.onDidChangeActiveTextEditor(
     (editor) => {
