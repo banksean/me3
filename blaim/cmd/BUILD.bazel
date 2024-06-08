@@ -7,8 +7,10 @@ go_library(
     visibility = ["//visibility:private"],
     deps = [
         "//blaim",
+        "@com_github_lithammer_fuzzysearch//fuzzy",
         "@com_github_sourcegraph_go_diff//diff",
         "@com_github_urfave_cli_v2//:cli",
+        "@in_gopkg_vmarkovtsev_go_lcss_v1//:go-lcss_v1",
     ],
 )
 

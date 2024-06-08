@@ -12,8 +12,14 @@ import (
 
 	"github.com/banksean/me3/blaim"
 
+	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/sourcegraph/go-diff/diff"
 	"github.com/urfave/cli/v2"
+	"gopkg.in/vmarkovtsev/go-lcss.v1"
+)
+
+const (
+	minEditDistanceSimilarity = 0.8
 )
 
 // processAcceptedSuggestionsLog parses the contents of a "accepted.suggestions.log" file
@@ -27,14 +33,11 @@ func processAcceptedSuggestionsLog(in io.Reader) (map[string][]*blaim.AcceptLogL
 		return nil, err
 	}
 	lines := strings.Split(string(b), "\n")
-	fmt.Printf("read %d accept log lines\n", len(lines))
-	for n, line := range lines {
-		fmt.Printf("parsing line %d: %q\n", n, line)
+	for _, line := range lines {
 		parsed, err := blaim.ParseAcceptLogLine(line)
 		if err != nil {
 			return nil, fmt.Errorf("error: %v", err)
 		}
-		fmt.Printf("parsed: %+v\n", parsed)
 		if parsed == nil {
 			continue
 		}
@@ -64,15 +67,6 @@ func getAdditions(body string) (string, int) {
 	return strings.Join(ret, "\n"), start
 }
 
-func searchMatchingRanges(diff, aiInsert string) []blaim.Range {
-	idx := strings.Index(diff, aiInsert)
-	if idx == -1 {
-		return nil
-	}
-	ret := []blaim.Range{}
-	return ret
-}
-
 // Parses the accept logs, compares their contents to the current git diff results
 // and produces a json-formatted array of BlaimLine objects, one for each git diff hunk
 // that contains text that appears in the accept logs.
@@ -83,7 +77,6 @@ func generate(diffStream, logReader io.Reader, out io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("error processing accept log: %v", err)
 	}
-	fmt.Printf("accepts: %+v\n", acceptsForFile["playground.js"])
 
 	// Read the git diff output and check for blaim entries for each file mentioned
 	// in the diff.
@@ -105,26 +98,31 @@ func generate(diffStream, logReader io.Reader, out io.Writer) error {
 			accepts = append(accepts, acceptsForFile[newName]...)
 		}
 		blaimLines := []blaim.BlaimLine{}
-		fmt.Printf("accepts for %q / %q: %v\n", newName, origName, accepts)
 		// Now check each "hunk" in the diff'd file to see if there are any
 		// entries in the .blaim file about it.
 		for _, hunk := range fdiff.Hunks {
 			addedInDiffHunk, addsStart := getAdditions(string(hunk.Body))
-			fmt.Printf("add in diff hunk at %d: %q\n", addsStart, addedInDiffHunk)
 			for _, accept := range accepts {
 				// Check for exact matches:
-				idx := strings.Index(addedInDiffHunk, accept.Text)
-				fmt.Printf("exact match? idx: %d\n", idx)
+				targetString := accept.Text
+				idx := strings.Index(addedInDiffHunk, targetString)
 				lineOffset := -1
 				if idx > 0 {
 					lineOffset = len(strings.Split(addedInDiffHunk[:idx], "\n"))
 				} else {
-					fmt.Printf("no match:\n%q\nvs:\n%q\n", addedInDiffHunk, accept.Text)
-					// TODO: Implement the suffix/prefix heuristic used by the vscocde-extension
+					ld := fuzzy.LevenshteinDistance(addedInDiffHunk, targetString)
+					similarity := float32(len(addedInDiffHunk)-ld) / float32(len(addedInDiffHunk))
+					if similarity < minEditDistanceSimilarity {
+						continue
+					}
+					targetString = string(lcss.LongestCommonSubstring([]byte(addedInDiffHunk), []byte(targetString)))
+					idx = strings.Index(addedInDiffHunk, targetString)
+					lineOffset = len(strings.Split(addedInDiffHunk[:idx], "\n"))
 				}
 				if lineOffset == -1 {
 					continue
 				}
+				targetStringLines := strings.Split(targetString, "\n")
 				blaimLine := blaim.BlaimLine{
 					FileName: accept.FileName,
 					Range: blaim.Range{
@@ -132,7 +130,10 @@ func generate(diffStream, logReader io.Reader, out io.Writer) error {
 							Line:      lineOffset + addsStart + int(hunk.NewStartLine),
 							Character: idx,
 						},
-						// TODO: figure out the End position.
+						End: blaim.Position{
+							Line:      lineOffset + addsStart + int(hunk.NewStartLine) + len(targetStringLines),
+							Character: len(targetStringLines[len(targetStringLines)-1]),
+						},
 					},
 					Text:            accept.Text,
 					InferenceConfig: accept.InferenceConfig,

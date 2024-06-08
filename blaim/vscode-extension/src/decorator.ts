@@ -113,7 +113,6 @@ export function activateDecorators(context: vscode.ExtensionContext) {
       // and false positives (user accepted a rote and trivial suggestion like
       // `if err == nil { return err }` in Go.
 
-
       // Look for exact matches of the accepted text at the original location:
       const actualTextAfterEdits = activeEditor.document.getText(range);
       if (actualTextAfterEdits == acceptLine.text) {
@@ -221,7 +220,7 @@ export function activateDecorators(context: vscode.ExtensionContext) {
 
   vscode.workspace.onDidOpenTextDocument(
     (textDoc) => {
-        triggerUpdateDecorations();
+      triggerUpdateDecorations();
     },
     null,
     context.subscriptions,

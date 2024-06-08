@@ -335,6 +335,12 @@ def go_repositories():
         version = "v1.2.4",
     )
     go_repository(
+        name = "com_github_lithammer_fuzzysearch",
+        importpath = "github.com/lithammer/fuzzysearch",
+        sum = "h1:/HIuJnjHuXS8bKaiTMeeDlW2/AyIWk2brx1V8LFgLN4=",
+        version = "v1.1.8",
+    )
+    go_repository(
         name = "com_github_mailru_easyjson",
         importpath = "github.com/mailru/easyjson",
         sum = "h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=",
@@ -509,6 +515,12 @@ def go_repositories():
         version = "v0.0.0-20240312152122-5f08fbb34913",
     )
     go_repository(
+        name = "com_github_yuin_goldmark",
+        importpath = "github.com/yuin/goldmark",
+        sum = "h1:fVcFKWvrslecOb/tg+Cc05dkeYx540o0FuFt3nUVDoE=",
+        version = "v1.4.13",
+    )
+    go_repository(
         name = "com_google_cloud_go",
         importpath = "cloud.google.com/go",
         sum = "h1:e0WKqKTd5BnrG8aKH3J3h+QvEIQtSUcf2n5UZ5ZgLtQ=",
@@ -519,6 +531,12 @@ def go_repositories():
         importpath = "gopkg.in/check.v1",
         sum = "h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=",
         version = "v1.0.0-20201130134442-10cb98267c6c",
+    )
+    go_repository(
+        name = "in_gopkg_vmarkovtsev_go_lcss_v1",
+        importpath = "gopkg.in/vmarkovtsev/go-lcss.v1",
+        sum = "h1:YY+ZVPsg2oJnV1rpzwIWtuCtQk71YFwuk47mMtjraN4=",
+        version = "v1.0.0-20181020221121-dfc501d07ea0",
     )
     go_repository(
         name = "in_gopkg_yaml_v3",
