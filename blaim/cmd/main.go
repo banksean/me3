@@ -61,11 +61,21 @@ func getAdditions(body string) (string, int) {
 	return strings.Join(ret, "\n"), start
 }
 
+func searchMatchingRanges(diff, aiInsert string) []blaim.Range {
+	idx := strings.Index(diff, aiInsert)
+	if idx == -1 {
+		return nil
+	}
+	ret := []blaim.Range{}
+	return ret
+}
+
 // Parses the accept logs, compares their contents to the current git diff results
 // and produces a json-formatted array of BlaimLine objects, one for each git diff hunk
 // that contains text that appears in the accept logs.
-func generate(logReader io.Reader) error {
-	diffReader := diff.NewMultiFileDiffReader(os.Stdin)
+func generate(diffStream, logReader io.Reader, out io.Writer) error {
+	diffReader := diff.NewMultiFileDiffReader(diffStream)
+
 	acceptsForFile, err := processAcceptedSuggestionsLog(logReader)
 	if err != nil {
 		return fmt.Errorf("error processing accept log: %v", err)
@@ -97,12 +107,17 @@ func generate(logReader io.Reader) error {
 		for _, hunk := range fdiff.Hunks {
 			addedInDiffHunk, addsStart := getAdditions(string(hunk.Body))
 			for _, accept := range accepts {
+				// Check for exact matches:
 				idx := strings.Index(addedInDiffHunk, accept.Text)
-				if idx < 0 {
+				lineOffset := -1
+				if idx > 0 {
+					lineOffset = len(strings.Split(addedInDiffHunk[:idx], "\n"))
+				} else {
+					// TODO: Implement the suffix/prefix heuristic used by the vscocde-extension
+				}
+				if lineOffset == -1 {
 					continue
 				}
-				lineOffset := len(strings.Split(addedInDiffHunk[:idx], "\n"))
-
 				blaimLine := blaim.BlaimLine{
 					FileName: accept.FileName,
 					Range: blaim.Range{
@@ -121,12 +136,12 @@ func generate(logReader io.Reader) error {
 		if len(blaimLines) == 0 {
 			continue
 		}
-		jsonBytes, err := json.MarshalIndent(blaimLines, "", "\t")
+		m := json.NewEncoder(out)
+		m.SetIndent("", "\t")
+		err = m.Encode(blaimLines)
 		if err != nil {
 			return fmt.Errorf("error marshaling blaimLines: %v", err)
 		}
-
-		fmt.Printf("%s\n", string(jsonBytes))
 	}
 	return nil
 }
@@ -240,7 +255,7 @@ func main() {
 			{
 				Name:    "generate",
 				Aliases: []string{"g"},
-				Usage:   "generate a .blaim file from accepted.suggestions.log",
+				Usage:   "generate a .blaim file from git diff output at stdin, and the contents of accepted.suggestions.log",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:        "accept-log",
@@ -255,7 +270,7 @@ func main() {
 						return fmt.Errorf("error opening accept log at %s: %v", acceptedSuggestionsLogPath, err)
 					}
 
-					return generate(logFile)
+					return generate(os.Stdin, logFile, os.Stdout)
 				},
 			},
 			{
