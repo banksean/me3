@@ -48,7 +48,7 @@ export function activateDecorators(context: vscode.ExtensionContext) {
     rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
     // Make the AI-generated text glow like it's magical, or radioactive :)
     textDecoration:
-      "opacity:1.0; text-shadow: 0 0 6px rgba(255, 255, 255, 0.75)",
+      "opacity:1.0; text-shadow: 0 0 6px rgba(200, 255, 255, 1); text-decoration: underline dotted gray;",
     overviewRulerColor: "blue",
     overviewRulerLane: vscode.OverviewRulerLane.Right,
     light: {
@@ -113,17 +113,18 @@ export function activateDecorators(context: vscode.ExtensionContext) {
       // and false positives (user accepted a rote and trivial suggestion like
       // `if err == nil { return err }` in Go.
 
+
       // Look for exact matches of the accepted text at the original location:
       const actualTextAfterEdits = activeEditor.document.getText(range);
       if (actualTextAfterEdits == acceptLine.text) {
         const decoration: vscode.DecorationOptions = {
           range: range,
           hoverMessage: new vscode.MarkdownString(
-            "## This is AI-generated code:\n```" +
+            "## This is AI-generated code:\n```\n" +
               JSON.stringify(acceptLine.inferenceConfig) +
-              "```\n" +
-              `originally at ${JSON.stringify(acceptLine.position)}\n` +
-              "## Raw text from the model:\n```\n" +
+              "\n```\n\n" +
+              `originally accepted at ${JSON.stringify(acceptLine.position)}\n` +
+              "Full text of suggestion:\n```\n" +
               acceptLine.text +
               "\n```\n",
           ),
