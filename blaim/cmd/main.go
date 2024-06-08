@@ -73,8 +73,9 @@ func searchMatchingRanges(diff, aiInsert string) []blaim.Range {
 // Parses the accept logs, compares their contents to the current git diff results
 // and produces a json-formatted array of BlaimLine objects, one for each git diff hunk
 // that contains text that appears in the accept logs.
-func generate(logReader io.Reader) error {
-	diffReader := diff.NewMultiFileDiffReader(os.Stdin)
+func generate(diffStream, logReader io.Reader, out io.Writer) error {
+	diffReader := diff.NewMultiFileDiffReader(diffStream)
+
 	acceptsForFile, err := processAcceptedSuggestionsLog(logReader)
 	if err != nil {
 		return fmt.Errorf("error processing accept log: %v", err)
@@ -135,12 +136,12 @@ func generate(logReader io.Reader) error {
 		if len(blaimLines) == 0 {
 			continue
 		}
-		jsonBytes, err := json.MarshalIndent(blaimLines, "", "\t")
+		m := json.NewEncoder(out)
+		m.SetIndent("", "\t")
+		err = m.Encode(blaimLines)
 		if err != nil {
 			return fmt.Errorf("error marshaling blaimLines: %v", err)
 		}
-
-		fmt.Printf("%s\n", string(jsonBytes))
 	}
 	return nil
 }
@@ -269,7 +270,7 @@ func main() {
 						return fmt.Errorf("error opening accept log at %s: %v", acceptedSuggestionsLogPath, err)
 					}
 
-					return generate(logFile)
+					return generate(os.Stdin, logFile, os.Stdout)
 				},
 			},
 			{

@@ -1,0 +1,21 @@
+diff --git a/playground.js b/playground.js
+index 482cfc3..a3888ff 100644
+--- a/playground.js
++++ b/playground.js
+@@ -1 +1,16 @@
+ // This is a playground for testing generative code suggestion logging.
++
++function fib(n) {
++  if (n <= 1) {
++    return n;
++  }
++  return fib(n - 1) + fib(n - 2;
++}
++
++console.log(fib(10));
++
++// Expected output:
++
++// This is hand-written:
++console.log('hi');
++
