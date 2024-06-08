@@ -7,7 +7,7 @@
         "character": 13
       },
       "end": {
-        "line": 0,
+        "line": 8,
         "character": 0
       }
     },
@@ -30,8 +30,8 @@
         "character": 48
       },
       "end": {
-        "line": 0,
-        "character": 0
+        "line": 9,
+        "character": 31
       }
     },
     "text": "\n  }\n  return fib(n - 1) + fib(n - 2",

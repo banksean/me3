@@ -145,7 +145,7 @@ func generate(diffStream, logReader io.Reader, out io.Writer) error {
 			continue
 		}
 		m := json.NewEncoder(out)
-		m.SetIndent("", "\t")
+		m.SetIndent("", "  ")
 		err = m.Encode(blaimLines)
 		if err != nil {
 			return fmt.Errorf("error marshaling blaimLines: %v", err)
