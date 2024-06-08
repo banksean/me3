@@ -49,8 +49,8 @@ export async function loadBlaimFile(context: vscode.ExtensionContext) {
   for (const ws of vscode.workspace.workspaceFolders || []) {
     const blaimContents = await vscode.workspace.fs.readFile(vscode.Uri.file(ws.uri.fsPath+'/.blaim'));
     const blaimJsonStr = new TextDecoder().decode(blaimContents);
-    addAcceptsFromBlaimFile(JSON.parse(blaimJsonStr));
-    console.log('read .blaim file');
+    const blaimJson:AcceptLogLine[] = JSON.parse(blaimJsonStr);
+    addAcceptsFromBlaimFile(blaimJson);
   }
 }
 

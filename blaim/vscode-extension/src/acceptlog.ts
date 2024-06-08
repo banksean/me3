@@ -15,7 +15,7 @@ export interface AcceptLogLine {
 const accepts: AcceptLogLine[] = [];
 let acceptsFromBlaimFile: AcceptLogLine[] = [];
 export function addAcceptsFromBlaimFile(accepts: AcceptLogLine[]) {
-  acceptsFromBlaimFile = accepts.concat(acceptsFromBlaimFile);
+  acceptsFromBlaimFile = accepts;
 }
 
 const acceptLogger = vscode.window.createOutputChannel("accepted.suggestions", {
