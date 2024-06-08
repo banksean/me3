@@ -27,11 +27,14 @@ func processAcceptedSuggestionsLog(in io.Reader) (map[string][]*blaim.AcceptLogL
 		return nil, err
 	}
 	lines := strings.Split(string(b), "\n")
-	for _, line := range lines {
+	fmt.Printf("read %d accept log lines\n", len(lines))
+	for n, line := range lines {
+		fmt.Printf("parsing line %d: %q\n", n, line)
 		parsed, err := blaim.ParseAcceptLogLine(line)
 		if err != nil {
 			return nil, fmt.Errorf("error: %v", err)
 		}
+		fmt.Printf("parsed: %+v\n", parsed)
 		if parsed == nil {
 			continue
 		}
@@ -80,6 +83,7 @@ func generate(diffStream, logReader io.Reader, out io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("error processing accept log: %v", err)
 	}
+	fmt.Printf("accepts: %+v\n", acceptsForFile["playground.js"])
 
 	// Read the git diff output and check for blaim entries for each file mentioned
 	// in the diff.
@@ -101,18 +105,21 @@ func generate(diffStream, logReader io.Reader, out io.Writer) error {
 			accepts = append(accepts, acceptsForFile[newName]...)
 		}
 		blaimLines := []blaim.BlaimLine{}
-
+		fmt.Printf("accepts for %q / %q: %v\n", newName, origName, accepts)
 		// Now check each "hunk" in the diff'd file to see if there are any
 		// entries in the .blaim file about it.
 		for _, hunk := range fdiff.Hunks {
 			addedInDiffHunk, addsStart := getAdditions(string(hunk.Body))
+			fmt.Printf("add in diff hunk at %d: %q\n", addsStart, addedInDiffHunk)
 			for _, accept := range accepts {
 				// Check for exact matches:
 				idx := strings.Index(addedInDiffHunk, accept.Text)
+				fmt.Printf("exact match? idx: %d\n", idx)
 				lineOffset := -1
 				if idx > 0 {
 					lineOffset = len(strings.Split(addedInDiffHunk[:idx], "\n"))
 				} else {
+					fmt.Printf("no match:\n%q\nvs:\n%q\n", addedInDiffHunk, accept.Text)
 					// TODO: Implement the suffix/prefix heuristic used by the vscocde-extension
 				}
 				if lineOffset == -1 {
@@ -217,7 +224,6 @@ func annotate() error {
 		}
 
 		fileLines := strings.Split(string(fileBytes), "\n")
-
 		// TODO: this doesn't handle multi-line code suggestions well.
 		// For instance, if an accepted suggestion spans multiple lines,
 		// (conains \n characters) then this will only annotate the *first*

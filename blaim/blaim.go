@@ -20,7 +20,7 @@ type BlaimLine struct {
 	Text string `json:"text"`
 	// InferenceConfig describes the request sent to the code-generating model,
 	// (e.g. the name of the model, temperature etc).
-	InferenceConfig InferenceConfig `json:"inference_config"`
+	InferenceConfig InferenceConfig `json:"inferenceConfig"`
 }
 
 type Position struct {
@@ -52,11 +52,11 @@ type InferenceConfig struct {
 }
 
 type AcceptLogLine struct {
-	FileName        string
-	Position        Position
-	Text            string
-	HeadGitCommit   GitCommit
-	InferenceConfig InferenceConfig
+	FileName        string          `json:"fileName"`
+	Position        Position        `json:"position"`
+	Text            string          `json:"text"`
+	HeadGitCommit   GitCommit       `json:"headGitCommit"`
+	InferenceConfig InferenceConfig `json:"inferenceConfig"`
 }
 
 func ParseAcceptLogLine(logLine string) (*AcceptLogLine, error) {
