@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	_ "embed"
 )
 
@@ -17,6 +19,12 @@ var (
 
 	//go:embed testdata/expected_blaim.json
 	expectedBlaimText string
+
+	//go:embed testdata/playground.js
+	playgroundJS string
+
+	//go:embed testdata/expected_annotate.txt
+	expectedAnnotateText string
 )
 
 // TestGenerate needs to read in some example data:
@@ -30,5 +38,47 @@ func TestGenerate(t *testing.T) {
 	got := out.String()
 	if got != expectedBlaimText {
 		t.Errorf("got:\n%s\nexpected:\n%s\n", got, expectedBlaimText)
+	}
+}
+
+func TestReadBlaimFile(t *testing.T) {
+	blaimLinesByFile, err := readBlaimFile(strings.NewReader(expectedBlaimText))
+	if err != nil {
+		t.Errorf("error reading blaim file: %v", err)
+	}
+	if len(blaimLinesByFile) != 1 {
+		t.Errorf("expected 1 file1, got %d", len(blaimLinesByFile))
+	}
+	if len(blaimLinesByFile["playground.js"]) != 2 {
+		t.Errorf("expected 2 blaim lines for playground.js, got %d", len(blaimLinesByFile["playground.js"]))
+	}
+}
+
+func TestAnnotateLines(t *testing.T) {
+	blaimLinesByFile, err := readBlaimFile(strings.NewReader(expectedBlaimText))
+	if err != nil {
+		t.Errorf("error reading blaim file: %v", err)
+	}
+	blaimRangeSet := BlaimRangeSet{
+		blaimLinesByFile["playground.js"],
+	}
+	lineNumber := 4
+	blaimLineMatches := blaimRangeSet.ForSourceLine(lineNumber)
+	if len(blaimLineMatches) != 1 {
+		t.Errorf("expected 1 blaim line match, got %d", len(blaimLineMatches))
+		return
+	}
+	blaimLine := blaimLineMatches[0]
+	expected := "[codegemma, temp: 0.2] "
+	if formatAnnotationLinePrefix(blaimLine) != expected {
+		t.Errorf("expected %s, got %s", expected, formatAnnotationLinePrefix(blaimLine))
+	}
+
+	out := &bytes.Buffer{}
+	annotateLines([]byte(playgroundJS), &blaimRangeSet, out)
+	got := out.String()
+	diff := cmp.Diff(expectedAnnotateText, got)
+	if diff != "" {
+		t.Errorf("diff: %s", diff)
 	}
 }

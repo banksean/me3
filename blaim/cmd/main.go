@@ -184,37 +184,14 @@ func formatAnnotationLinePrefix(line *blaim.BlaimLine) string {
 // parses a json-formatted list of BlaimLine objects from stdin,
 // and produces a line-by-line annotation of AI-generated code for
 // each file mentioned in the BlaimLine input list.
-func annotate() error {
-	reader := os.Stdin
-	um := json.NewDecoder(reader)
-	blaimLines := []*blaim.BlaimLine{}
-	for {
-		err := um.Decode(&blaimLines)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			fmt.Printf("error decoding BlaimLines: %v", err)
-			os.Exit(1)
-		}
-	}
-	blaimLinesByFile := map[string][]*blaim.BlaimLine{}
-
-	longestLinePrefixLen := -1
-
+func annotate(blaimReader io.Reader, out io.Writer) error {
 	// Group the blaim lines by the source file path they refer to.
-	for _, blaimLine := range blaimLines {
-		if _, ok := blaimLinesByFile[blaimLine.FileName]; !ok {
-			blaimLinesByFile[blaimLine.FileName] = []*blaim.BlaimLine{}
-		}
-		blaimLinesByFile[blaimLine.FileName] = append(blaimLinesByFile[blaimLine.FileName], blaimLine)
-		linePrefix := formatAnnotationLinePrefix(blaimLine)
-		if len(linePrefix) > longestLinePrefixLen {
-			longestLinePrefixLen = len(linePrefix)
-		}
+	blaimLinesByFile, err := readBlaimFile(blaimReader)
+	if err != nil {
+		return err
 	}
 
-	defaultLinePrefix := strings.Repeat(" ", longestLinePrefixLen)
-
+	// Read the contents of each file in the diff
 	for fileName, fileBlaimLines := range blaimLinesByFile {
 		blaimRangeSet := &BlaimRangeSet{
 			blaimLines: fileBlaimLines,
@@ -224,23 +201,63 @@ func annotate() error {
 			return err
 		}
 
-		fileLines := strings.Split(string(fileBytes), "\n")
 		// TODO: this doesn't handle multi-line code suggestions well.
 		// For instance, if an accepted suggestion spans multiple lines,
 		// (conains \n characters) then this will only annotate the *first*
 		// line containing the generated code suggestion.
-		for lineNumber, lineText := range fileLines {
-			linePrefix := defaultLinePrefix
-			blaimLineMatches := blaimRangeSet.ForSourceLine(lineNumber)
-			if len(blaimLineMatches) > 0 {
-				// Just use the first blaim entry, if there is more than one for
-				// this line of the diff.
-				linePrefix = formatAnnotationLinePrefix(blaimLineMatches[0])
-			}
-			fmt.Printf("%s%s\n", linePrefix, lineText)
-		}
+		// Just use the first blaim entry, if there is more than one for
+		// this line of the diff.
+		annotateLines(fileBytes, blaimRangeSet, out)
 	}
 	return nil
+}
+
+func annotateLines(fileBytes []byte, blaimRangeSet *BlaimRangeSet, out io.Writer) {
+	fileLines := strings.Split(string(fileBytes), "\n")
+	longestLinePrefixLen := 0
+	for lineNumber := range fileLines {
+		blaimLineMatches := blaimRangeSet.ForSourceLine(lineNumber)
+		if len(blaimLineMatches) > 0 {
+			linePrefix := formatAnnotationLinePrefix(blaimLineMatches[0])
+			if len(linePrefix) > longestLinePrefixLen {
+				longestLinePrefixLen = len(linePrefix)
+			}
+		}
+	}
+
+	defaultLinePrefix := strings.Repeat(" ", longestLinePrefixLen)
+
+	for lineNumber, lineText := range fileLines {
+		linePrefix := defaultLinePrefix
+		blaimLineMatches := blaimRangeSet.ForSourceLine(lineNumber)
+		if len(blaimLineMatches) > 0 {
+			linePrefix = formatAnnotationLinePrefix(blaimLineMatches[0])
+		}
+		fmt.Fprintf(out, "%s%s\n", linePrefix, lineText)
+	}
+}
+
+func readBlaimFile(blaimReader io.Reader) (map[string][]*blaim.BlaimLine, error) {
+	um := json.NewDecoder(blaimReader)
+	blaimLines := []*blaim.BlaimLine{}
+	for {
+		err := um.Decode(&blaimLines)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			fmt.Printf("error decoding BlaimLines: %v", err)
+			return nil, err
+		}
+	}
+	blaimLinesByFile := map[string][]*blaim.BlaimLine{}
+
+	for _, blaimLine := range blaimLines {
+		if _, ok := blaimLinesByFile[blaimLine.FileName]; !ok {
+			blaimLinesByFile[blaimLine.FileName] = []*blaim.BlaimLine{}
+		}
+		blaimLinesByFile[blaimLine.FileName] = append(blaimLinesByFile[blaimLine.FileName], blaimLine)
+	}
+	return blaimLinesByFile, nil
 }
 
 var (
@@ -285,7 +302,7 @@ func main() {
 				Aliases: []string{"a"},
 				Usage:   "produce a line-by-line annotation of source files that contain machine-generated code changes",
 				Action: func(cCtx *cli.Context) error {
-					return annotate()
+					return annotate(os.Stdin, os.Stdout)
 				},
 			},
 		},
