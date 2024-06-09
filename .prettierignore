@@ -1,0 +1,6 @@
+.git
+.aspect
+node_modules
+dist/
+build/
+**/testdata/
