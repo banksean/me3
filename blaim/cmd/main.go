@@ -53,18 +53,14 @@ func processAcceptedSuggestionsLog(in io.Reader) (map[string][]*blaim.AcceptLogL
 // care about the additions here. Returns the text of just the added
 // lines, if any, and the offset for the line within the hunk where
 // the additions start.
-func getAdditions(body string) (string, int) {
+func getAdditions(body string) string {
 	ret := []string{}
-	start := -1
-	for i, line := range strings.Split(body, "\n") {
+	for _, line := range strings.Split(body, "\n") {
 		if strings.HasPrefix(line, "+") {
-			if len(ret) == 0 {
-				start = i
-			}
 			ret = append(ret, line[1:])
 		}
 	}
-	return strings.Join(ret, "\n"), start
+	return strings.Join(ret, "\n")
 }
 
 // Parses the accept logs, compares their contents to the current git diff results
@@ -101,45 +97,11 @@ func generate(diffStream, logReader io.Reader, out io.Writer) error {
 		// Now check each "hunk" in the diff'd file to see if there are any
 		// entries in the .blaim file about it.
 		for _, hunk := range fdiff.Hunks {
-			addedInDiffHunk, addsStart := getAdditions(string(hunk.Body))
-			for _, accept := range accepts {
-				// Check for exact matches:
-				targetString := accept.Text
-				idx := strings.Index(addedInDiffHunk, targetString)
-				lineOffset := -1
-				if idx > 0 {
-					lineOffset = len(strings.Split(addedInDiffHunk[:idx], "\n"))
-				} else {
-					ld := fuzzy.LevenshteinDistance(addedInDiffHunk, targetString)
-					similarity := float32(len(addedInDiffHunk)-ld) / float32(len(addedInDiffHunk))
-					if similarity < minEditDistanceSimilarity {
-						continue
-					}
-					targetString = string(lcss.LongestCommonSubstring([]byte(addedInDiffHunk), []byte(targetString)))
-					idx = strings.Index(addedInDiffHunk, targetString)
-					lineOffset = len(strings.Split(addedInDiffHunk[:idx], "\n"))
-				}
-				if lineOffset == -1 {
-					continue
-				}
-				targetStringLines := strings.Split(targetString, "\n")
-				blaimLine := blaim.BlaimLine{
-					FileName: accept.FileName,
-					Range: blaim.Range{
-						Start: blaim.Position{
-							Line:      lineOffset + addsStart + int(hunk.NewStartLine),
-							Character: idx,
-						},
-						End: blaim.Position{
-							Line:      lineOffset + addsStart + int(hunk.NewStartLine) + len(targetStringLines),
-							Character: len(targetStringLines[len(targetStringLines)-1]),
-						},
-					},
-					Text:            accept.Text,
-					InferenceConfig: accept.InferenceConfig,
-				}
-				blaimLines = append(blaimLines, blaimLine)
-			}
+			addedInDiffHunk := getAdditions(string(hunk.Body))
+			// addsStartAtHunkLine is the *line* within the hunk body where the additions start
+			// Now find any acceptLog entriesd that match the added text.
+			matchingBlaimLines := getMatchingAcceptLogsForHunk(accepts, addedInDiffHunk)
+			blaimLines = append(blaimLines, matchingBlaimLines...)
 		}
 		if len(blaimLines) == 0 {
 			continue
@@ -154,6 +116,67 @@ func generate(diffStream, logReader io.Reader, out io.Writer) error {
 	return nil
 }
 
+func indexToPos(s string, i int) blaim.Position {
+	prefixLines := strings.Split(s[:i], "\n")
+	startLine := len(prefixLines) + 1
+	startChar := i - len(strings.Join(prefixLines[:len(prefixLines)-1], "\n"))
+	return blaim.Position{
+		Line:      startLine,
+		Character: startChar,
+	}
+}
+
+// Things to watch out for:
+// - The accept log text may not exactly match the diff text, so we need to do some fuzzy matching.
+// - The accept log text may span multiple lines, so we need to handle that.
+// - The line numbers in the accept log may not match the line numbers in the diff
+// - The user may have accepted suggstions in a different order than they appear in the diff
+func getMatchingAcceptLogsForHunk(accepts []*blaim.AcceptLogLine, addedInDiffHunk string) []blaim.BlaimLine {
+	blaimLines := []blaim.BlaimLine{}
+	for _, accept := range accepts {
+		targetString := accept.Text
+		startIdx := strings.Index(addedInDiffHunk, targetString)
+		endIdx := -1
+		if startIdx >= 0 { // exact match
+			// the accepted text starts at lineOffset within the diff hunk, so count the newlines preceding the accepted text
+			endIdx = startIdx + len(targetString)
+		} else { // check for a fuzzy match
+			// This edit distance check skips too many true positives, so we're not using it for now.
+			if false {
+				ld := fuzzy.LevenshteinDistance(addedInDiffHunk, targetString)
+				similarity := float32(len(addedInDiffHunk)-ld) / float32(len(addedInDiffHunk))
+
+				fmt.Printf("similarity: %f\n", similarity)
+				if similarity < minEditDistanceSimilarity {
+					continue
+				}
+			}
+
+			// Find the longest common substring between the diff hunk and the accept log text
+			targetString = string(lcss.LongestCommonSubstring([]byte(addedInDiffHunk), []byte(targetString)))
+			startIdx = strings.Index(addedInDiffHunk, targetString)
+			endIdx = startIdx + len(targetString)
+		}
+		if endIdx == -1 { // no match
+			continue
+		}
+
+		startPos, endPos := indexToPos(addedInDiffHunk, startIdx), indexToPos(addedInDiffHunk, endIdx)
+
+		blaimLine := blaim.BlaimLine{
+			FileName: accept.FileName,
+			Range: blaim.Range{
+				Start: startPos,
+				End:   endPos,
+			},
+			Text:            accept.Text,
+			InferenceConfig: accept.InferenceConfig,
+		}
+		blaimLines = append(blaimLines, blaimLine)
+	}
+	return blaimLines
+}
+
 // Represents the set of blaim lines and ranges for a particular source file.
 type BlaimRangeSet struct {
 	blaimLines []*blaim.BlaimLine
@@ -162,15 +185,9 @@ type BlaimRangeSet struct {
 // ForSourceLine returns the BlaimLines that cover that line of the source file.
 func (s *BlaimRangeSet) ForSourceLine(lineNumber int) []*blaim.BlaimLine {
 	ret := []*blaim.BlaimLine{}
-	// This problem is straight out of a coding interview question:
-	//   "Given a list of ranges (start, end), write a function that returns true
-	//   if a particular value falls within any of the ranges."
-	// And reader, this O(number of ranges) solution is not what the interviewer
-	// wants to see, but it's sufficient for this PoC:
 	for _, blaimLine := range s.blaimLines {
-		textLines := strings.Split(blaimLine.Text, "\n")
 		if lineNumber >= blaimLine.Range.Start.Line &&
-			lineNumber <= blaimLine.Range.Start.Line+len(textLines) {
+			lineNumber <= blaimLine.Range.End.Line {
 			ret = append(ret, blaimLine)
 		}
 	}
@@ -214,24 +231,28 @@ func annotate(blaimReader io.Reader, out io.Writer) error {
 
 func annotateLines(fileBytes []byte, blaimRangeSet *BlaimRangeSet, out io.Writer) {
 	fileLines := strings.Split(string(fileBytes), "\n")
+	prefixLines := []string{}
+
 	longestLinePrefixLen := 0
+
 	for lineNumber := range fileLines {
 		blaimLineMatches := blaimRangeSet.ForSourceLine(lineNumber)
 		if len(blaimLineMatches) > 0 {
 			linePrefix := formatAnnotationLinePrefix(blaimLineMatches[0])
+			prefixLines = append(prefixLines, linePrefix)
 			if len(linePrefix) > longestLinePrefixLen {
 				longestLinePrefixLen = len(linePrefix)
 			}
+		} else {
+			prefixLines = append(prefixLines, "")
 		}
 	}
 
-	defaultLinePrefix := strings.Repeat(" ", longestLinePrefixLen)
-
+	defaultPrefix := strings.Repeat(" ", longestLinePrefixLen)
 	for lineNumber, lineText := range fileLines {
-		linePrefix := defaultLinePrefix
-		blaimLineMatches := blaimRangeSet.ForSourceLine(lineNumber)
-		if len(blaimLineMatches) > 0 {
-			linePrefix = formatAnnotationLinePrefix(blaimLineMatches[0])
+		linePrefix := prefixLines[lineNumber]
+		if linePrefix == "" {
+			linePrefix = defaultPrefix
 		}
 		fmt.Fprintf(out, "%s%s\n", linePrefix, lineText)
 	}

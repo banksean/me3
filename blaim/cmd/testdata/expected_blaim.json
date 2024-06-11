@@ -3,12 +3,12 @@
     "fileName": "playground.js",
     "range": {
       "start": {
-        "line": 4,
+        "line": 3,
         "character": 13
       },
       "end": {
-        "line": 8,
-        "character": 0
+        "line": 6,
+        "character": 1
       }
     },
     "text": "(n) {\n  if (n \u003c= 1) {\n    return n;\n",
@@ -26,15 +26,38 @@
     "fileName": "playground.js",
     "range": {
       "start": {
-        "line": 6,
-        "character": 48
+        "line": 5,
+        "character": 14
       },
       "end": {
-        "line": 9,
-        "character": 31
+        "line": 7,
+        "character": 32
       }
     },
     "text": "\n  }\n  return fib(n - 1) + fib(n - 2",
+    "inferenceConfig": {
+      "endpoint": "",
+      "maxLines": 0,
+      "maxTokens": 20,
+      "temperature": 0.2,
+      "modelName": "codegemma",
+      "modelFormat": "",
+      "delay": 0
+    }
+  },
+  {
+    "fileName": "playground.js",
+    "range": {
+      "start": {
+        "line": 7,
+        "character": 32
+      },
+      "end": {
+        "line": 13,
+        "character": 1
+      }
+    },
+    "text": ";\n}\n\nconsole.log(fib(10));\n\n// Expected output:\n//",
     "inferenceConfig": {
       "endpoint": "",
       "maxLines": 0,

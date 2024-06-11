@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/sourcegraph/go-diff/diff"
 
 	_ "embed"
 )
@@ -36,9 +38,43 @@ func TestGenerate(t *testing.T) {
 	out := &bytes.Buffer{}
 	generate(strings.NewReader(diffText), strings.NewReader(acceptedSuggestionsLogText), out)
 	got := out.String()
-	if got != expectedBlaimText {
-		t.Errorf("got:\n%s\nexpected:\n%s\n", got, expectedBlaimText)
+	diff := cmp.Diff(expectedBlaimText, got)
+	if diff != "" {
+		fmt.Printf("expected: %s\n", expectedBlaimText)
+		fmt.Printf("got: %s\n", got)
+		t.Errorf("diff: %s", diff)
 	}
+}
+
+func TestProcessAcceptedSuggestionsLog(t *testing.T) {
+	acceptsForFile, err := processAcceptedSuggestionsLog(strings.NewReader(acceptedSuggestionsLogText))
+	if err != nil {
+		t.Errorf("error processing accept log: %v", err)
+	}
+	if len(acceptsForFile["playground.js"]) != 3 {
+		t.Errorf("expected 3 files, got %d", len(acceptsForFile["playground.js"]))
+	}
+}
+
+func TestGetAdditions(t *testing.T) {
+	diffReader := diff.NewMultiFileDiffReader(strings.NewReader(diffText))
+	fdiff, err := diffReader.ReadFile()
+	if err != nil {
+		t.Errorf("error reading diff: %v", err)
+	}
+	if len(fdiff.Hunks) != 1 {
+		t.Errorf("expected 1 hunk, got %d", len(fdiff.Hunks))
+	}
+	for _, hunk := range fdiff.Hunks {
+		additions := getAdditions(string(hunk.Body))
+		if len(additions) == 0 {
+			t.Errorf("expected some additions, got none")
+		}
+	}
+}
+
+func TestFoo(t *testing.T) {
+
 }
 
 func TestReadBlaimFile(t *testing.T) {
@@ -49,8 +85,8 @@ func TestReadBlaimFile(t *testing.T) {
 	if len(blaimLinesByFile) != 1 {
 		t.Errorf("expected 1 file1, got %d", len(blaimLinesByFile))
 	}
-	if len(blaimLinesByFile["playground.js"]) != 2 {
-		t.Errorf("expected 2 blaim lines for playground.js, got %d", len(blaimLinesByFile["playground.js"]))
+	if len(blaimLinesByFile["playground.js"]) != 3 {
+		t.Errorf("expected 3 blaim lines for playground.js, got %d", len(blaimLinesByFile["playground.js"]))
 	}
 }
 
