@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
   activateDecorators(context);
 
   console.log(
-    `writing accepted suggestions logs: export ACCEPT_LOG=${context.logUri.path.replace(' ', '\\ ')}/accepted.suggestions.log`,
+    `writing accepted suggestions logs: export ACCEPT_LOG=${context.logUri.path.replace(" ", "\\ ")}/accepted.suggestions.log`,
   );
 
   // This is the callback that VS Code invokes whenever the user *accepts* a suggestion.

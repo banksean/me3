@@ -218,12 +218,6 @@ func annotate(blaimReader io.Reader, out io.Writer) error {
 			return err
 		}
 
-		// TODO: this doesn't handle multi-line code suggestions well.
-		// For instance, if an accepted suggestion spans multiple lines,
-		// (conains \n characters) then this will only annotate the *first*
-		// line containing the generated code suggestion.
-		// Just use the first blaim entry, if there is more than one for
-		// this line of the diff.
 		annotateLines(fileBytes, blaimRangeSet, out)
 	}
 	return nil
