@@ -20,6 +20,7 @@ import (
 
 const (
 	minEditDistanceSimilarity = 0.8
+	minLCS                    = 20
 )
 
 // processAcceptedSuggestionsLog parses the contents of a "accepted.suggestions.log" file
@@ -98,10 +99,15 @@ func generate(diffStream, logReader io.Reader, out io.Writer) error {
 		// entries in the .blaim file about it.
 		for _, hunk := range fdiff.Hunks {
 			addedInDiffHunk := getAdditions(string(hunk.Body))
-			// addsStartAtHunkLine is the *line* within the hunk body where the additions start
 			// Now find any acceptLog entriesd that match the added text.
 			matchingBlaimLines := getMatchingAcceptLogsForHunk(accepts, addedInDiffHunk)
-			blaimLines = append(blaimLines, matchingBlaimLines...)
+			// Offset the line numbers in the blaim entries by the start line of the hunk
+			// so they line up with the full file contents.
+			for _, match := range matchingBlaimLines {
+				match.Range.Start.Line += int(hunk.NewStartLine) + 1
+				match.Range.End.Line += int(hunk.NewStartLine) + 1
+				blaimLines = append(blaimLines, match)
+			}
 		}
 		if len(blaimLines) == 0 {
 			continue
@@ -154,6 +160,9 @@ func getMatchingAcceptLogsForHunk(accepts []*blaim.AcceptLogLine, addedInDiffHun
 
 			// Find the longest common substring between the diff hunk and the accept log text
 			targetString = string(lcss.LongestCommonSubstring([]byte(addedInDiffHunk), []byte(targetString)))
+			if len(targetString) < minLCS {
+				continue
+			}
 			startIdx = strings.Index(addedInDiffHunk, targetString)
 			endIdx = startIdx + len(targetString)
 		}
@@ -162,7 +171,6 @@ func getMatchingAcceptLogsForHunk(accepts []*blaim.AcceptLogLine, addedInDiffHun
 		}
 
 		startPos, endPos := indexToPos(addedInDiffHunk, startIdx), indexToPos(addedInDiffHunk, endIdx)
-
 		blaimLine := blaim.BlaimLine{
 			FileName: accept.FileName,
 			Range: blaim.Range{
@@ -230,7 +238,7 @@ func annotateLines(fileBytes []byte, blaimRangeSet *BlaimRangeSet, out io.Writer
 	longestLinePrefixLen := 0
 
 	for lineNumber := range fileLines {
-		blaimLineMatches := blaimRangeSet.ForSourceLine(lineNumber)
+		blaimLineMatches := blaimRangeSet.ForSourceLine(lineNumber + 1)
 		if len(blaimLineMatches) > 0 {
 			linePrefix := formatAnnotationLinePrefix(blaimLineMatches[0])
 			prefixLines = append(prefixLines, linePrefix)

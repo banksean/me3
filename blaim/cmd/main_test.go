@@ -34,7 +34,6 @@ var (
 // An accepted.suggestions.log stream
 // and make sure that generate produces the correct condensted blaim list.
 func TestGenerate(t *testing.T) {
-
 	out := &bytes.Buffer{}
 	generate(strings.NewReader(diffText), strings.NewReader(acceptedSuggestionsLogText), out)
 	got := out.String()
@@ -51,8 +50,8 @@ func TestProcessAcceptedSuggestionsLog(t *testing.T) {
 	if err != nil {
 		t.Errorf("error processing accept log: %v", err)
 	}
-	if len(acceptsForFile["playground.js"]) != 3 {
-		t.Errorf("expected 3 files, got %d", len(acceptsForFile["playground.js"]))
+	if len(acceptsForFile["playground.js"]) != 1 {
+		t.Errorf("expected 1 accept, got %d", len(acceptsForFile["playground.js"]))
 	}
 }
 
@@ -62,8 +61,8 @@ func TestGetAdditions(t *testing.T) {
 	if err != nil {
 		t.Errorf("error reading diff: %v", err)
 	}
-	if len(fdiff.Hunks) != 1 {
-		t.Errorf("expected 1 hunk, got %d", len(fdiff.Hunks))
+	if len(fdiff.Hunks) != 2 {
+		t.Errorf("expected 2 hunks, got %d", len(fdiff.Hunks))
 	}
 	for _, hunk := range fdiff.Hunks {
 		additions := getAdditions(string(hunk.Body))
@@ -71,10 +70,6 @@ func TestGetAdditions(t *testing.T) {
 			t.Errorf("expected some additions, got none")
 		}
 	}
-}
-
-func TestFoo(t *testing.T) {
-
 }
 
 func TestReadBlaimFile(t *testing.T) {
@@ -85,8 +80,8 @@ func TestReadBlaimFile(t *testing.T) {
 	if len(blaimLinesByFile) != 1 {
 		t.Errorf("expected 1 file1, got %d", len(blaimLinesByFile))
 	}
-	if len(blaimLinesByFile["playground.js"]) != 3 {
-		t.Errorf("expected 3 blaim lines for playground.js, got %d", len(blaimLinesByFile["playground.js"]))
+	if len(blaimLinesByFile["playground.js"]) != 1 {
+		t.Errorf("expected 1 blaim line for playground.js, got %d", len(blaimLinesByFile["playground.js"]))
 	}
 }
 
@@ -98,7 +93,7 @@ func TestAnnotateLines(t *testing.T) {
 	blaimRangeSet := BlaimRangeSet{
 		blaimLinesByFile["playground.js"],
 	}
-	lineNumber := 4
+	lineNumber := 26
 	blaimLineMatches := blaimRangeSet.ForSourceLine(lineNumber)
 	if len(blaimLineMatches) != 1 {
 		t.Errorf("expected 1 blaim line match, got %d", len(blaimLineMatches))
