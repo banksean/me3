@@ -99,9 +99,12 @@ func (g *gameBoard) WriteTable(w io.Writer, spyMasterView bool) {
 	}
 	cardTransformer := text.Transformer(func(c interface{}) string {
 		card := c.(string)
-		team := g.teamForCard[card]
-		guessed := g.guessedWords.Contains(card)
-		if guessed || spyMasterView {
+		lowerCard := strings.ToLower(card)
+		team := g.teamForCard[lowerCard]
+		guessed := g.guessedWords.Contains(lowerCard)
+		if guessed {
+			return teamColor[team+GUESSED].Sprint(card)
+		} else if spyMasterView {
 			return teamColor[team].Sprint(card)
 		}
 		return defaultColor.Sprint(card)
