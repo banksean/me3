@@ -3,5 +3,6 @@
     "${workspaceFolder}/bazel-me3/external/pip_deps_gensim/site-packages",
     "${workspaceFolder}/bazel-me3/external/pip_deps_nltk/site-packages"
   ],
-  "svg.preview.background": "dark-transparent"
+  "svg.preview.background": "dark-transparent",
+  "makefile.configureOnOpen": false
 }
