@@ -75,8 +75,16 @@ Modernize the repo so that:
 - 2026-06-22: Retried replacing `go_sdk.host(...)` with
   `go_sdk.download(...)` for Go 1.26.4. The targeted Go build stayed stuck in
   analysis for 110 seconds without visible downloader progress, matching the
-  earlier SDK archive-fetch problem, so the repo remains on `go_sdk.host(...)`
-  for now.
+  earlier SDK archive-fetch problem, so the repo remained on `go_sdk.host(...)`
+  temporarily.
+- 2026-06-22: Switched the Go SDK registration to `go_sdk.download(...)` for Go
+  1.26.4 after a macOS host build failed because the installed host Go was
+  1.24.1 while `rules_go` expected 1.26.4. This makes the Go toolchain
+  reproducible across Linux and macOS instead of depending on every developer's
+  host Go installation. `bazel mod tidy` completed and added Go 1.26.4 SDK
+  checksums to `MODULE.bazel.lock`; a targeted local Linux build was stopped
+  after 75 seconds because this container again stalled in analysis while using
+  the downloaded SDK path.
 - 2026-06-22: Simplified the `//:go` wrapper so it asks the selected Go binary
   for `GOROOT` instead of requiring GNU `realpath`, then removed the obsolete
   macOS `coreutils` setup note from the README. Validated with `bazel run
@@ -208,8 +216,8 @@ migration.
   GNU `realpath` dependency. The wrapper still exists because it preserves the
   repo-root working directory and Go SDK `PATH` behavior expected by
   `bazel run //:go`.
-- Revisit `go_sdk.host(...)` and move back to `go_sdk.download(...)` once Go SDK
-  archive downloads are reliable in the developer/CI environment.
+- Completed: Replace `go_sdk.host(...)` with `go_sdk.download(...)` so macOS and
+  Linux builds do not depend on an exact host Go installation.
 - Completed: Move `//:buildifier` from the Go `buildtools` dependency to the
   prebuilt Buildifier binary. The old Go dependency exposed an internal
   `@rules_proto` repo-mapping failure under Bzlmod.
