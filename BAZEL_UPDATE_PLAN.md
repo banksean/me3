@@ -6,9 +6,10 @@ that `MODULE.bazel` and `WORKSPACE` were both active: JavaScript/TypeScript and
 some C++ dependencies were configured through Bzlmod, while Go, Python,
 protobuf, and Ruff still came from `WORKSPACE`.
 
-Bazel 8 disables `WORKSPACE` by default, and Bazel 9 removes it. A quick probe
-with Bazel 8.7.0 fails immediately because `@rules_python` is introduced only
-from `WORKSPACE`.
+Bazel 8 disables `WORKSPACE` by default, and Bazel 9 removes it. The initial
+probe with Bazel 8.7.0 failed immediately because `@rules_python` was
+introduced only from `WORKSPACE`; the current tree has completed that migration
+and now builds and tests on Bazel 8.7.0.
 
 ## Goal
 
@@ -55,6 +56,11 @@ Modernize the repo so that:
 - 2026-06-22: Updated C++ support libraries: `googletest` to 1.17.0.bcr.2,
   `google_benchmark` to 1.9.5, and `abseil-cpp` to 20250512.1. Validated with
   `bazel mod tidy`, `bazel test //cpp/...`, and a workspace Buildifier check.
+- 2026-06-22: Completed full Bazel 8.7.0 validation with `bazel build //...`
+  and `bazel test //...`. The first full test run exposed expected
+  `requirements.txt` drift from the newer pip compile flow; regenerated it with
+  `bazel run //:requirements.update`, then reran `bazel test //...`
+  successfully.
 
 ### 1. Finish the Bzlmod migration
 
@@ -85,9 +91,8 @@ USE_BAZEL_VERSION=8.7.0 bazel build //...
 ```
 
 The target state is that this command passes without `--enable_workspace`.
-Current targeted validation passes for C++ and Go targets; full-repo build and
-test validation are still pending because Python and JS/TS targets have not yet
-been exercised after the Bzlmod migration.
+Current full-repo build and test validation passes on Bazel 8.7.0 without
+`--enable_workspace`.
 
 ### 2. Update rule versions
 
@@ -135,7 +140,8 @@ complete.
 Recommended sequence:
 
 1. Completed: Move dependencies to `MODULE.bazel`.
-2. Completed: Verify with Bazel 8 using `USE_BAZEL_VERSION=8.7.0`.
+2. Completed: Verify with Bazel 8.7.0 using `bazel build //...` and
+   `bazel test //...`.
 3. Completed: Update `.bazelversion` to a stable Bazel 8 release and commit that state.
 4. Probe Bazel 9.
 5. Fix any remaining Starlarkification or removed-feature issues.
