@@ -9,7 +9,7 @@ protobuf, and Ruff still came from `WORKSPACE`.
 Bazel 8 disables `WORKSPACE` by default, and Bazel 9 removes it. The initial
 probe with Bazel 8.7.0 failed immediately because `@rules_python` was
 introduced only from `WORKSPACE`; the current tree has completed that migration
-and now builds and tests on Bazel 8.7.0.
+and now builds and tests on Bazel 9.1.0.
 
 ## Goal
 
@@ -17,8 +17,7 @@ Modernize the repo so that:
 
 - `bazel build //...` works on Bazel 8 without `--enable_workspace`.
 - The repo no longer depends on `WORKSPACE` for external repositories.
-- The pinned Bazel version can be bumped safely, ideally to a current Bazel 9
-  release after the Bazel 8 migration is clean.
+- The pinned Bazel version can be bumped safely to a current Bazel 9 release.
 - Deprecated and noisy BUILD patterns are cleaned up while keeping target
   behavior stable.
 
@@ -61,6 +60,12 @@ Modernize the repo so that:
   `requirements.txt` drift from the newer pip compile flow; regenerated it with
   `bazel run //:requirements.update`, then reran `bazel test //...`
   successfully.
+- 2026-06-22: Completed the Bazel 9.1.0 probe and bumped `.bazelversion` to
+  9.1.0. Fixed Bazel 9 removed native-rule autoloads by adding explicit
+  `rules_cc`, `rules_python`, and `rules_shell` loads, added direct
+  `rules_cc`/`rules_shell` module deps, and aligned the direct `abseil-cpp` pin
+  with the Bazel 9 resolved graph. Validated with `USE_BAZEL_VERSION=9.1.0
+  bazel build //...` and `USE_BAZEL_VERSION=9.1.0 bazel test //...`.
 
 ### 1. Finish the Bzlmod migration
 
@@ -104,6 +109,8 @@ Current notable pins:
 - `rules_go` 0.61.1 in `MODULE.bazel`
 - `gazelle` 0.51.3 in `MODULE.bazel`
 - `rules_python` 2.0.2 in `MODULE.bazel`
+- `rules_cc` 0.2.20 in `MODULE.bazel`
+- `rules_shell` 0.8.0 in `MODULE.bazel`
 - `buildifier_prebuilt` 6.4.0 in `MODULE.bazel`
 - `aspect_bazel_lib` 2.22.0
 - `aspect_rules_js` 2.4.2
@@ -113,7 +120,7 @@ Current notable pins:
 - `rules_nodejs` 6.7.3
 - `google_benchmark` 1.9.5
 - `googletest` 1.17.0.bcr.2
-- `abseil-cpp` 20250512.1
+- `abseil-cpp` 20250814.1
 
 Use the Bazel Central Registry as the source of truth for current compatible
 versions. Update one ecosystem at a time:
@@ -143,9 +150,9 @@ Recommended sequence:
 2. Completed: Verify with Bazel 8.7.0 using `bazel build //...` and
    `bazel test //...`.
 3. Completed: Update `.bazelversion` to a stable Bazel 8 release and commit that state.
-4. Probe Bazel 9.
-5. Fix any remaining Starlarkification or removed-feature issues.
-6. Update `.bazelversion` to Bazel 9 when `bazel build //...` and
+4. Completed: Probe Bazel 9.1.0.
+5. Completed: Fix remaining Starlarkification or removed-feature issues.
+6. Completed: Update `.bazelversion` to Bazel 9.1.0 when `bazel build //...` and
    `bazel test //...` pass.
 
 Useful checks:
@@ -153,8 +160,8 @@ Useful checks:
 ```sh
 USE_BAZEL_VERSION=8.7.0 bazel build //...
 USE_BAZEL_VERSION=8.7.0 bazel test //...
-USE_BAZEL_VERSION=9.x.x bazel build //...
-USE_BAZEL_VERSION=9.x.x bazel test //...
+USE_BAZEL_VERSION=9.1.0 bazel build //...
+USE_BAZEL_VERSION=9.1.0 bazel test //...
 ```
 
 ## Cleanup Items
@@ -166,6 +173,9 @@ migration.
   to suppress the implicit `.npmrc` warning.
 - Completed: Update the direct `googletest`, `google_benchmark`, and
   `abseil-cpp` pins in `MODULE.bazel`.
+- Completed: Add direct `rules_cc` and `rules_shell` deps and explicit
+  `cc_*`/`sh_binary` loads required by Bazel 9.
+- Completed: Add explicit `py_binary`/`py_library` loads required by Bazel 9.
 - Completed: Remove unused root BUILD loads:
   - `py_binary`
   - `py_test`
@@ -206,9 +216,11 @@ bazel build //...
 bazel test //...
 USE_BAZEL_VERSION=8.7.0 bazel build //...
 USE_BAZEL_VERSION=8.7.0 bazel test //...
+USE_BAZEL_VERSION=9.1.0 bazel build //...
+USE_BAZEL_VERSION=9.1.0 bazel test //...
 ```
 
 all pass, and `WORKSPACE` is no longer required.
 
-After that, Bazel 9 migration can be treated as a smaller follow-up focused on
-remaining removed APIs or rule-version compatibility.
+Remaining modernization can now focus on reproducibility and ecosystem cleanup
+rather than Bazel major-version blockers.
