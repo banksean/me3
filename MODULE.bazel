@@ -102,13 +102,13 @@ bazel_dep(name = "google_benchmark", version = "1.9.5", dev_dependency = True, r
 bazel_dep(name = "rules_cc", version = "0.2.20")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 bazel_dep(name = "abseil-cpp", version = "20250814.1", repo_name = "com_google_absl")
-bazel_dep(name = "aspect_bazel_lib", version = "2.22.0")
-bazel_dep(name = "aspect_rules_js", version = "2.4.2")
+bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
+bazel_dep(name = "aspect_rules_js", version = "3.2.2")
 
 ####### Node.js version #########
 # By default you get the node version from DEFAULT_NODE_VERSION in @rules_nodejs//nodejs:repositories.bzl
 # Optionally you can pin a different node version:
-bazel_dep(name = "rules_nodejs", version = "6.7.3")
+bazel_dep(name = "rules_nodejs", version = "6.7.4")
 
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node", dev_dependency = True)
 node.toolchain(node_version = "16.14.2")
@@ -124,15 +124,19 @@ npm.npm_translate_lock(
 use_repo(npm, "npm")
 
 pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
+pnpm.pnpm(
+    name = "pnpm",
+    pnpm_version = "9.15.9",
+)
 
 # Allows developers to use the matching pnpm version, for example:
 # bazel run -- @pnpm --dir /home/runner/work/rules_js/rules_js install
 use_repo(pnpm, "pnpm")
 
-bazel_dep(name = "aspect_rules_ts", version = "3.6.3")
+bazel_dep(name = "aspect_rules_ts", version = "3.8.11")
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
-rules_ts_ext.deps()
+rules_ts_ext.deps(ts_version_from = "//:package.json")
 use_repo(rules_ts_ext, "npm_typescript")
 
 bazel_dep(name = "aspect_rules_jest", version = "0.25.2")

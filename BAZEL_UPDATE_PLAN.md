@@ -66,6 +66,14 @@ Modernize the repo so that:
   `rules_cc`/`rules_shell` module deps, and aligned the direct `abseil-cpp` pin
   with the Bazel 9 resolved graph. Validated with `USE_BAZEL_VERSION=9.1.0
   bazel build //...` and `USE_BAZEL_VERSION=9.1.0 bazel test //...`.
+- 2026-06-22: Regenerated `pnpm-lock.yaml` with Bazel-managed pnpm 9.15.9 and
+  completed the `aspect_rules_js` 3.x migration. Updated `aspect_bazel_lib` to
+  2.22.5, `aspect_rules_js` to 3.2.2, `aspect_rules_ts` to 3.8.11, and
+  `rules_nodejs` to 6.7.4. Pinned the `rules_ts` TypeScript toolchain to this
+  repo's `package.json` so Bazel continues to use the declared TypeScript
+  5.4.5 instead of the rules default. Validated with `bazel mod tidy`, `bazel
+  mod graph`, `bazel test //pool:test`, `bazel build //...`, `bazel test
+  //...`, and a workspace Buildifier check.
 
 ### 1. Finish the Bzlmod migration
 
@@ -112,12 +120,12 @@ Current notable pins:
 - `rules_cc` 0.2.20 in `MODULE.bazel`
 - `rules_shell` 0.8.0 in `MODULE.bazel`
 - `buildifier_prebuilt` 6.4.0 in `MODULE.bazel`
-- `aspect_bazel_lib` 2.22.0
-- `aspect_rules_js` 2.4.2
-- `aspect_rules_ts` 3.6.3
+- `aspect_bazel_lib` 2.22.5
+- `aspect_rules_js` 3.2.2
+- `aspect_rules_ts` 3.8.11
 - `aspect_rules_jest` 0.25.2
 - `aspect_rules_lint` 2.7.1
-- `rules_nodejs` 6.7.3
+- `rules_nodejs` 6.7.4
 - `google_benchmark` 1.9.5
 - `googletest` 1.17.0.bcr.2
 - `abseil-cpp` 20250814.1
@@ -196,11 +204,11 @@ migration.
   prebuilt Buildifier binary. The old Go dependency exposed an internal
   `@rules_proto` repo-mapping failure under Bzlmod.
 - Completed: Move the JS/TS/Jest/Lint rules off prerelease pins:
-  - `aspect_rules_js` 2.4.2
-  - `aspect_rules_ts` 3.6.3
+  - `aspect_rules_js` 3.2.2
+  - `aspect_rules_ts` 3.8.11
   - `aspect_rules_jest` 0.25.2
   - `aspect_rules_lint` 2.7.1
-- Regenerate `pnpm-lock.yaml` with pnpm 9 or newer, then move to
+- Completed: Regenerate `pnpm-lock.yaml` with pnpm 9 or newer, then move to
   `aspect_rules_js` 3.x and compatible `aspect_rules_ts`/`rules_nodejs` pins.
 - Run Buildifier after each migration step. With the current prebuilt alias, run
   `bazel build //:buildifier` and then invoke the generated binary over the
