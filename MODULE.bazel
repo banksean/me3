@@ -10,7 +10,7 @@ module(
 )
 
 # bazel_dep(name = "bazel_skylib", version = "1.5.0")
-bazel_dep(name = "googletest", version = "1.12.1", dev_dependency = True, repo_name = "com_google_googletest")
+bazel_dep(name = "googletest", version = "1.14.0.bcr.1", dev_dependency = True, repo_name = "com_google_googletest")
 bazel_dep(name = "google_benchmark", version = "1.8.3", dev_dependency = True, repo_name = "com_github_google_benchmark")
 
 bazel_dep(name = "abseil-cpp", version = "20240116.1", repo_name = "com_google_absl")
@@ -29,6 +29,7 @@ node.toolchain(node_version = "16.14.2")
 npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
 npm.npm_translate_lock(
     name = "npm",
+    npmrc = "//:.npmrc",
     pnpm_lock = "//:pnpm-lock.yaml",
     verify_node_modules_ignored = "//:.bazelignore",
 )

@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 3,
-  "moduleFileHash": "c8b1b0d9148a0696d47deb72a3a623218f0f046e826afd4bda302286b3d3de43",
+  "moduleFileHash": "1783badb3c650d39108ac63e0e7da1c43a010b40c32ced8216e02aebc04da769",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -72,6 +72,7 @@
               "tagName": "npm_translate_lock",
               "attributeValues": {
                 "name": "npm",
+                "npmrc": "//:.npmrc",
                 "pnpm_lock": "//:pnpm-lock.yaml",
                 "verify_node_modules_ignored": "//:.bazelignore"
               },
@@ -92,7 +93,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 37,
+            "line": 38,
             "column": 21
           },
           "imports": {
@@ -109,7 +110,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 45,
+            "line": 46,
             "column": 29
           },
           "imports": {
@@ -125,7 +126,7 @@
               "devDependency": true,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 46,
+                "line": 47,
                 "column": 18
               }
             }
@@ -2678,9 +2679,9 @@
       "general": {
         "bzlTransitiveDigest": "uU5NbR9ZkjUfz3olJUMFrMKjhg6CL7waF2Q3c9oNs4E=",
         "accumulatedFileDigests": {
+          "@@aspect_bazel_lib~2.7.6~toolchains~yq_linux_arm64//:yq": "dc58ef7f1651f5a8da6ded8d1ced99df933f9f511b102302c1502ba70350c527",
           "@@//:.npmrc": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "@@//:pnpm-lock.yaml": "0f0b4bce3c5e5a2eb6e3761dab1d41805f3d8c5c36d8de56a3d71b686fa14aac",
-          "@@aspect_bazel_lib~2.7.6~toolchains~yq_darwin_arm64//:yq": "db8c11ca4c1dda8fe7c211e82e28191d48bd9ae83471b952003e819de79bcb51"
+          "@@//:pnpm-lock.yaml": "0f0b4bce3c5e5a2eb6e3761dab1d41805f3d8c5c36d8de56a3d71b686fa14aac"
         },
         "envVariables": {},
         "generatedRepoSpecs": {
@@ -27274,6 +27275,7 @@
               "name": "aspect_rules_js~2.0.0-rc1~npm~npm",
               "pnpm_lock": "@@//:pnpm-lock.yaml",
               "update_pnpm_lock": false,
+              "npmrc": "@@//:.npmrc",
               "use_home_npmrc": false,
               "patches": {},
               "patch_args": {
@@ -35553,8 +35555,8 @@
           ],
           [
             "aspect_rules_js~2.0.0-rc1",
-            "yq_darwin_arm64",
-            "aspect_bazel_lib~2.7.6~toolchains~yq_darwin_arm64"
+            "yq_linux_arm64",
+            "aspect_bazel_lib~2.7.6~toolchains~yq_linux_arm64"
           ],
           [
             "bazel_features~1.9.0",

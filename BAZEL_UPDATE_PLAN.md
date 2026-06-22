@@ -23,6 +23,13 @@ Modernize the repo so that:
 
 ## Proposed Sequence
 
+## Progress
+
+- 2026-06-22: Completed baseline hygiene cleanup. Made `.npmrc` explicit in
+  `npm.npm_translate_lock(...)`, aligned the direct `googletest` pin with the
+  resolved module version, removed unused root BUILD loads, and replaced
+  constant C++ globs with explicit file lists.
+
 ### 1. Finish the Bzlmod migration
 
 Move the remaining external dependency setup from `WORKSPACE` into

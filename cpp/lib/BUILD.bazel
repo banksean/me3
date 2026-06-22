@@ -20,8 +20,8 @@ cc_test(
 
 cc_library(
     name = "lib",
-    srcs = glob(["word_generator.cc"]),
-    hdrs = glob(["word_generator.h"]),
+    srcs = ["word_generator.cc"],
+    hdrs = ["word_generator.h"],
     copts = [
         "-std=c++20",
     ],
