@@ -96,10 +96,10 @@ http_archive(
     url = "https://github.com/astral-sh/ruff/releases/download/v0.4.4/ruff-0.4.4-x86_64-unknown-linux-gnu.tar.gz",
 )
 
-bazel_dep(name = "googletest", version = "1.14.0.bcr.1", dev_dependency = True, repo_name = "com_google_googletest")
-bazel_dep(name = "google_benchmark", version = "1.8.3", dev_dependency = True, repo_name = "com_github_google_benchmark")
+bazel_dep(name = "googletest", version = "1.17.0.bcr.2", dev_dependency = True, repo_name = "com_google_googletest")
+bazel_dep(name = "google_benchmark", version = "1.9.5", dev_dependency = True, repo_name = "com_github_google_benchmark")
 
-bazel_dep(name = "abseil-cpp", version = "20240116.1", repo_name = "com_google_absl")
+bazel_dep(name = "abseil-cpp", version = "20250512.1", repo_name = "com_google_absl")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.0")
 bazel_dep(name = "aspect_rules_js", version = "2.4.2")
 

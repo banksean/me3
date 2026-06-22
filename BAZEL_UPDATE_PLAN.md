@@ -52,6 +52,9 @@ Modernize the repo so that:
   graph`, `bazel build //pool/...`, `bazel test //pool:test`, `bazel build
   //bazel/tools/format:format`, `bazel build //:format`, and a workspace
   Buildifier check.
+- 2026-06-22: Updated C++ support libraries: `googletest` to 1.17.0.bcr.2,
+  `google_benchmark` to 1.9.5, and `abseil-cpp` to 20250512.1. Validated with
+  `bazel mod tidy`, `bazel test //cpp/...`, and a workspace Buildifier check.
 
 ### 1. Finish the Bzlmod migration
 
@@ -103,8 +106,9 @@ Current notable pins:
 - `aspect_rules_jest` 0.25.2
 - `aspect_rules_lint` 2.7.1
 - `rules_nodejs` 6.7.3
-- `google_benchmark` 1.8.3
-- `googletest` 1.14.0.bcr.1
+- `google_benchmark` 1.9.5
+- `googletest` 1.17.0.bcr.2
+- `abseil-cpp` 20250512.1
 
 Use the Bazel Central Registry as the source of truth for current compatible
 versions. Update one ecosystem at a time:
@@ -154,9 +158,8 @@ migration.
 
 - Completed: Add `npmrc = "//:.npmrc"` to `npm.npm_translate_lock(...)` in `MODULE.bazel`
   to suppress the implicit `.npmrc` warning.
-- Completed: Update the direct `googletest` pin in `MODULE.bazel`; `bazel mod graph`
-  currently warns that the root asks for 1.12.1 while resolution selects
-  1.14.0.bcr.1.
+- Completed: Update the direct `googletest`, `google_benchmark`, and
+  `abseil-cpp` pins in `MODULE.bazel`.
 - Completed: Remove unused root BUILD loads:
   - `py_binary`
   - `py_test`
