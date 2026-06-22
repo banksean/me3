@@ -74,6 +74,11 @@ Modernize the repo so that:
   5.4.5 instead of the rules default. Validated with `bazel mod tidy`, `bazel
   mod graph`, `bazel test //pool:test`, `bazel build //...`, `bazel test
   //...`, and a workspace Buildifier check.
+- 2026-06-22: Retried replacing `go_sdk.host(...)` with
+  `go_sdk.download(...)` for Go 1.26.4. The targeted Go build stayed stuck in
+  analysis for 110 seconds without visible downloader progress, matching the
+  earlier SDK archive-fetch problem, so the repo remains on `go_sdk.host(...)`
+  for now.
 
 ### 1. Finish the Bzlmod migration
 
