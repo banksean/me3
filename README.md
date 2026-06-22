@@ -71,7 +71,7 @@ Edit `requirements.in` (NOT `requirements.txt`) to reflect your updated *direct*
 - Add the name you would normally use for `pip install <package-name>` to `requirements.in`.
 - You probably need to figure out which version of the package you need and also specify it on that same line, separated by `==`. See `requirements.in` for examples.
 - Run `bazel run //:requirements.update` in the root directory of this repo.  This will generate the full `requirements.txt` file including all the direct dependency's transitive dependencies as well.
-- In your `py_binary` or `py_library` etc target, you'll need to add new lines to the `deps=[...]` list: `requirement("<package name>"),`. (You may need to add `load("@pip_deps//:requirements.bzl", "requirement")` to that BUILD file if it's not there already.)
+- In your `py_binary` or `py_library` etc target, you'll need to add new lines to the `deps=[...]` list: `requirement("<package name>"),`. (You may need to add `load("@me3_pip_deps//:requirements.bzl", "requirement")` to that BUILD file if it's not there already.)
 
 ### Other helpful bits
 

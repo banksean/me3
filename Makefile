@@ -20,7 +20,7 @@ update-go-bazel-files:
 
 .PHONY: update-go-bazel-deps
 update-go-bazel-deps:
-	$(BAZEL) run //:gazelle -- update-repos -from_file=go.mod -to_macro=go_repositories.bzl%go_repositories -prune
+	$(BAZEL) run @io_bazel_rules_go//go -- mod tidy
 
 .PHONY: gazelle
 gazelle: update-go-bazel-deps update-go-bazel-files

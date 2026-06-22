@@ -1,4 +1,4 @@
-load("@pip_deps//:requirements.bzl", "requirement")
+load("@me3_pip_deps//:requirements.bzl", "requirement")
 
 py_library(
     name = "board",

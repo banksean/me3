@@ -1,10 +1,10 @@
 # Bazel Modernization Plan
 
-This repo currently builds with the pinned Bazel version in `.bazelversion`
-(`7.0.2`), but it is not ready for modern Bazel defaults. The main issue is
-that `MODULE.bazel` and `WORKSPACE` are both active: JavaScript/TypeScript and
-some C++ dependencies are configured through Bzlmod, while Go, Python, protobuf,
-and Ruff still come from `WORKSPACE`.
+This repo originally built with the pinned Bazel version in `.bazelversion`
+(`7.0.2`), but it was not ready for modern Bazel defaults. The main issue was
+that `MODULE.bazel` and `WORKSPACE` were both active: JavaScript/TypeScript and
+some C++ dependencies were configured through Bzlmod, while Go, Python,
+protobuf, and Ruff still came from `WORKSPACE`.
 
 Bazel 8 disables `WORKSPACE` by default, and Bazel 9 removes it. A quick probe
 with Bazel 8.7.0 fails immediately because `@rules_python` is introduced only
@@ -29,6 +29,21 @@ Modernize the repo so that:
   `npm.npm_translate_lock(...)`, aligned the direct `googletest` pin with the
   resolved module version, removed unused root BUILD loads, and replaced
   constant C++ globs with explicit file lists.
+- 2026-06-22: Migrated Go, Gazelle, Python, pip dependencies, and Ruff binaries
+  from `WORKSPACE` to `MODULE.bazel`, then bumped `.bazelversion` to Bazel
+  8.7.0. The generated `go_repositories.bzl` macro is no longer used; Go
+  dependencies now come from `go.mod` through Gazelle's
+  `go_deps.from_file(...)` extension. `WORKSPACE` is now only a compatibility
+  stub. The first attempt used a downloaded Go 1.24.12 SDK because current
+  Gazelle builds helper tools from a `go.work` requiring Go 1.24.12 or newer,
+  but SDK archive downloads were too slow in this environment. The migration
+  now uses the host Go 1.26.4 SDK through `go_sdk.host(...)`; this unblocks
+  Bazel 8 builds, but is less reproducible than a downloaded SDK and should be
+  revisited after the rest of the migration is green.
+- 2026-06-22: Validated the Bzlmod migration with `bazel mod tidy`,
+  `bazel query @go_sdk//:ROOT`, `bazel build //cpp/...`, `bazel build //journ`,
+  `bazel build //codenames-go //gencommitmsg //blaim/...`, and a workspace
+  Buildifier check using the prebuilt Buildifier binary on Bazel 8.7.0.
 
 ### 1. Finish the Bzlmod migration
 
@@ -37,19 +52,19 @@ Move the remaining external dependency setup from `WORKSPACE` into
 
 Specific work:
 
-- Replace `rules_go` and Gazelle `http_archive` setup with Bzlmod
+- Completed: Replace `rules_go` and Gazelle `http_archive` setup with Bzlmod
   `bazel_dep(...)` entries and module extensions.
-- Replace generated `go_repositories.bzl` usage with Gazelle's Bzlmod
+- Completed: Replace generated `go_repositories.bzl` usage with Gazelle's Bzlmod
   `go_deps.from_file(go_mod = "//:go.mod")` flow.
-- Register the Go SDK through the `rules_go` Bzlmod extension instead of
-  `go_register_toolchains(...)` from `WORKSPACE`.
-- Replace `rules_python` `http_archive`, `python_register_toolchains`, and
+- Completed: Register the Go SDK through the `rules_go` Bzlmod extension instead
+  of `go_register_toolchains(...)` from `WORKSPACE`.
+- Completed: Replace `rules_python` `http_archive`, `python_register_toolchains`, and
   `pip_parse` setup with current `rules_python` Bzlmod extensions.
-- Stop pinning `com_google_protobuf` 3.14.0 from `WORKSPACE`; use the BCR
+- Completed: Stop pinning `com_google_protobuf` 3.14.0 from `WORKSPACE`; use the BCR
   `protobuf` module if a direct protobuf dependency is still needed.
-- Replace `aspect_rules_lint` `fetch_ruff()` from `WORKSPACE` with the current
+- Completed: Replace `aspect_rules_lint` `fetch_ruff()` from `WORKSPACE` with the current
   Bzlmod setup for Ruff/tooling.
-- Reduce `WORKSPACE` to a compatibility stub or remove it once Bazel 8 builds
+- Completed: Reduce `WORKSPACE` to a compatibility stub or remove it once Bazel 8 builds
   without `--enable_workspace`.
 
 Validation:
@@ -59,6 +74,9 @@ USE_BAZEL_VERSION=8.7.0 bazel build //...
 ```
 
 The target state is that this command passes without `--enable_workspace`.
+Current targeted validation passes for C++ and Go targets; full-repo build and
+test validation are still pending because Python and JS/TS targets have not yet
+been exercised after the Bzlmod migration.
 
 ### 2. Update rule versions
 
@@ -67,17 +85,17 @@ Bzlmod migration, so failures are easier to attribute.
 
 Current notable pins:
 
-- `rules_go` 0.44.2 in `WORKSPACE`
-- `bazel_gazelle` 0.35.0 in `WORKSPACE`
-- `rules_python` 0.29.0 in `WORKSPACE`
+- `rules_go` 0.61.1 in `MODULE.bazel`
+- `gazelle` 0.51.3 in `MODULE.bazel`
+- `rules_python` 2.0.2 in `MODULE.bazel`
+- `buildifier_prebuilt` 6.1.2 in `MODULE.bazel`
 - `aspect_rules_js` 2.0.0-rc1
 - `aspect_rules_ts` 3.0.0-rc0
 - `aspect_rules_jest` 0.22.0-rc0
 - `aspect_rules_lint` 1.0.0-rc1
 - `rules_nodejs` 6.1.0
 - `google_benchmark` 1.8.3
-- `googletest` direct pin at 1.12.1, though module resolution currently picks
-  1.14.0.bcr.1
+- `googletest` 1.14.0.bcr.1
 
 Use the Bazel Central Registry as the source of truth for current compatible
 versions. Update one ecosystem at a time:
@@ -103,9 +121,9 @@ complete.
 
 Recommended sequence:
 
-1. Keep `.bazelversion` at `7.0.2` while moving dependencies to `MODULE.bazel`.
-2. Verify with Bazel 8 using `USE_BAZEL_VERSION=8.7.0`.
-3. Update `.bazelversion` to a stable Bazel 8 release and commit that state.
+1. Completed: Move dependencies to `MODULE.bazel`.
+2. Completed: Verify with Bazel 8 using `USE_BAZEL_VERSION=8.7.0`.
+3. Completed: Update `.bazelversion` to a stable Bazel 8 release and commit that state.
 4. Probe Bazel 9.
 5. Fix any remaining Starlarkification or removed-feature issues.
 6. Update `.bazelversion` to Bazel 9 when `bazel build //...` and
@@ -125,26 +143,33 @@ USE_BAZEL_VERSION=9.x.x bazel test //...
 These are not the main blockers, but they should be cleaned up during the
 migration.
 
-- Add `npmrc = "//:.npmrc"` to `npm.npm_translate_lock(...)` in `MODULE.bazel`
+- Completed: Add `npmrc = "//:.npmrc"` to `npm.npm_translate_lock(...)` in `MODULE.bazel`
   to suppress the implicit `.npmrc` warning.
-- Update the direct `googletest` pin in `MODULE.bazel`; `bazel mod graph`
+- Completed: Update the direct `googletest` pin in `MODULE.bazel`; `bazel mod graph`
   currently warns that the root asks for 1.12.1 while resolution selects
   1.14.0.bcr.1.
-- Remove unused root BUILD loads:
+- Completed: Remove unused root BUILD loads:
   - `py_binary`
   - `py_test`
   - `py_console_script_binary`
-- Replace constant globs in `cpp/lib/BUILD.bazel`:
+- Completed: Replace constant globs in `cpp/lib/BUILD.bazel`:
   - `glob(["word_generator.cc"])`
   - `glob(["word_generator.h"])`
-- Revisit labels that reference `@go_sdk`, especially:
+- Completed: Revisit labels that reference `@go_sdk`, especially:
   - root `:gofmt`
   - `bazel/tools/format:format`
   - `bazel/tools/go:go`
   The Bzlmod Go setup may expose the SDK repository differently.
 - Consider replacing the hand-written `bazel/tools/go` wrapper if current
   `rules_go` offers a simpler supported way to run the pinned Go toolchain.
-- Run Buildifier after each migration step.
+- Revisit `go_sdk.host(...)` and move back to `go_sdk.download(...)` once Go SDK
+  archive downloads are reliable in the developer/CI environment.
+- Completed: Move `//:buildifier` from the Go `buildtools` dependency to the
+  prebuilt Buildifier binary. The old Go dependency exposed an internal
+  `@rules_proto` repo-mapping failure under Bzlmod.
+- Run Buildifier after each migration step. With the current prebuilt alias, run
+  `bazel build //:buildifier` and then invoke the generated binary over the
+  desired file list.
 
 ## Acceptance Criteria
 

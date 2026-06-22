@@ -10,6 +10,92 @@ module(
 )
 
 # bazel_dep(name = "bazel_skylib", version = "1.5.0")
+bazel_dep(name = "rules_go", version = "0.61.1", repo_name = "io_bazel_rules_go")
+bazel_dep(name = "gazelle", version = "0.51.3", repo_name = "bazel_gazelle")
+
+bazel_dep(name = "buildifier_prebuilt", version = "6.1.2", dev_dependency = True)
+
+go_sdk = use_extension("@io_bazel_rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.host(
+    name = "go_sdk",
+    version = "1.26.4",
+)
+use_repo(
+    go_sdk,
+    "go_sdk",
+    "go_toolchains",
+)
+
+register_toolchains("@go_toolchains//:all")
+
+go_deps = use_extension("@bazel_gazelle//:extensions.bzl", "go_deps")
+go_deps.from_file(go_mod = "//:go.mod")
+use_repo(
+    go_deps,
+    "com_github_chzyer_readline",
+    "com_github_google_go_cmp",
+    "com_github_invopop_jsonschema",
+    "com_github_jedib0t_go_pretty_v6",
+    "com_github_jmorganca_ollama",
+    "com_github_lithammer_fuzzysearch",
+    "com_github_sashabaranov_go_openai",
+    "com_github_sourcegraph_go_diff",
+    "com_github_urfave_cli_v2",
+    "in_gopkg_vmarkovtsev_go_lcss_v1",
+    "org_bitbucket_creachadair_stringset",
+    "org_golang_x_tools",
+)
+
+bazel_dep(name = "rules_python", version = "2.0.2")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.defaults(python_version = "3.11")
+python.toolchain(python_version = "3.11")
+use_repo(
+    python,
+    "python_3_11",
+)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "me3_pip_deps",
+    python_version = "3.11",
+    requirements_lock = "//:requirements.txt",
+)
+use_repo(pip, "me3_pip_deps")
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+_RUFF_BUILD_FILE_CONTENT = """exports_files(["ruff", "ruff.exe"])"""
+
+http_archive(
+    name = "ruff_aarch64-apple-darwin",
+    build_file_content = _RUFF_BUILD_FILE_CONTENT,
+    sha256 = "bc285f4cc528dd1aa495e4e58c8d204720389b5ebab3deefc14cb97d07a1a460",
+    url = "https://github.com/astral-sh/ruff/releases/download/v0.4.4/ruff-0.4.4-aarch64-apple-darwin.tar.gz",
+)
+
+http_archive(
+    name = "ruff_aarch64-unknown-linux-gnu",
+    build_file_content = _RUFF_BUILD_FILE_CONTENT,
+    sha256 = "8ae35b6773bba1ca414c5134ba7e10935f35880bebbe50f18bb609bad9da5b13",
+    url = "https://github.com/astral-sh/ruff/releases/download/v0.4.4/ruff-0.4.4-aarch64-unknown-linux-gnu.tar.gz",
+)
+
+http_archive(
+    name = "ruff_x86_64-apple-darwin",
+    build_file_content = _RUFF_BUILD_FILE_CONTENT,
+    sha256 = "1c2acfd16db77b010873053ad43160951baf2653cfc38bf66a3f377912f49299",
+    url = "https://github.com/astral-sh/ruff/releases/download/v0.4.4/ruff-0.4.4-x86_64-apple-darwin.tar.gz",
+)
+
+http_archive(
+    name = "ruff_x86_64-unknown-linux-gnu",
+    build_file_content = _RUFF_BUILD_FILE_CONTENT,
+    sha256 = "77240a01efe7063b4755e2672ad85fda9e3d9c13ddd15157642b0736fed26b1c",
+    url = "https://github.com/astral-sh/ruff/releases/download/v0.4.4/ruff-0.4.4-x86_64-unknown-linux-gnu.tar.gz",
+)
+
 bazel_dep(name = "googletest", version = "1.14.0.bcr.1", dev_dependency = True, repo_name = "com_google_googletest")
 bazel_dep(name = "google_benchmark", version = "1.8.3", dev_dependency = True, repo_name = "com_github_google_benchmark")
 
