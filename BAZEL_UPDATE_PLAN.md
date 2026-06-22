@@ -45,13 +45,11 @@ Modernize the repo so that:
   `bazel build //codenames-go //gencommitmsg //blaim/...`, and a workspace
   Buildifier check using the prebuilt Buildifier binary on Bazel 8.7.0.
 - 2026-06-22: Updated the JS/TS/Jest/Lint rule stack off prerelease pins while
-  keeping compatibility with the existing pnpm lockfile v6. `aspect_rules_js`
-  3.x currently requires pnpm lockfile v9, and this container's system npm/pnpm
-  tooling is not usable for regenerating `pnpm-lock.yaml`, so the lockfile v9
-  migration remains a follow-up. Validated with `bazel mod tidy`, `bazel mod
-  graph`, `bazel build //pool/...`, `bazel test //pool:test`, `bazel build
-  //bazel/tools/format:format`, `bazel build //:format`, and a workspace
-  Buildifier check.
+  keeping compatibility with the then-current pnpm lockfile v6. Validated with
+  `bazel mod tidy`, `bazel mod graph`, `bazel build //pool/...`, `bazel test
+  //pool:test`, `bazel build //bazel/tools/format:format`, `bazel build
+  //:format`, and a workspace Buildifier check. The later pnpm v9 and
+  `aspect_rules_js` 3.x migration is recorded below.
 - 2026-06-22: Updated C++ support libraries: `googletest` to 1.17.0.bcr.2,
   `google_benchmark` to 1.9.5, and `abseil-cpp` to 20250512.1. Validated with
   `bazel mod tidy`, `bazel test //cpp/...`, and a workspace Buildifier check.
@@ -222,9 +220,9 @@ migration.
   - `aspect_rules_lint` 2.7.1
 - Completed: Regenerate `pnpm-lock.yaml` with pnpm 9 or newer, then move to
   `aspect_rules_js` 3.x and compatible `aspect_rules_ts`/`rules_nodejs` pins.
-- Run Buildifier after each migration step. With the current prebuilt alias, run
-  `bazel build //:buildifier` and then invoke the generated binary over the
-  desired file list.
+- Completed: Run Buildifier after each migration step. With the current
+  prebuilt alias, run `bazel build //:buildifier` and then invoke the generated
+  binary over the desired file list.
 
 ## Acceptance Criteria
 
