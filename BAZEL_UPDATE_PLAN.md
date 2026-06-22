@@ -44,6 +44,14 @@ Modernize the repo so that:
   `bazel query @go_sdk//:ROOT`, `bazel build //cpp/...`, `bazel build //journ`,
   `bazel build //codenames-go //gencommitmsg //blaim/...`, and a workspace
   Buildifier check using the prebuilt Buildifier binary on Bazel 8.7.0.
+- 2026-06-22: Updated the JS/TS/Jest/Lint rule stack off prerelease pins while
+  keeping compatibility with the existing pnpm lockfile v6. `aspect_rules_js`
+  3.x currently requires pnpm lockfile v9, and this container's system npm/pnpm
+  tooling is not usable for regenerating `pnpm-lock.yaml`, so the lockfile v9
+  migration remains a follow-up. Validated with `bazel mod tidy`, `bazel mod
+  graph`, `bazel build //pool/...`, `bazel test //pool:test`, `bazel build
+  //bazel/tools/format:format`, `bazel build //:format`, and a workspace
+  Buildifier check.
 
 ### 1. Finish the Bzlmod migration
 
@@ -88,12 +96,13 @@ Current notable pins:
 - `rules_go` 0.61.1 in `MODULE.bazel`
 - `gazelle` 0.51.3 in `MODULE.bazel`
 - `rules_python` 2.0.2 in `MODULE.bazel`
-- `buildifier_prebuilt` 6.1.2 in `MODULE.bazel`
-- `aspect_rules_js` 2.0.0-rc1
-- `aspect_rules_ts` 3.0.0-rc0
-- `aspect_rules_jest` 0.22.0-rc0
-- `aspect_rules_lint` 1.0.0-rc1
-- `rules_nodejs` 6.1.0
+- `buildifier_prebuilt` 6.4.0 in `MODULE.bazel`
+- `aspect_bazel_lib` 2.22.0
+- `aspect_rules_js` 2.4.2
+- `aspect_rules_ts` 3.6.3
+- `aspect_rules_jest` 0.25.2
+- `aspect_rules_lint` 2.7.1
+- `rules_nodejs` 6.7.3
 - `google_benchmark` 1.8.3
 - `googletest` 1.14.0.bcr.1
 
@@ -167,6 +176,13 @@ migration.
 - Completed: Move `//:buildifier` from the Go `buildtools` dependency to the
   prebuilt Buildifier binary. The old Go dependency exposed an internal
   `@rules_proto` repo-mapping failure under Bzlmod.
+- Completed: Move the JS/TS/Jest/Lint rules off prerelease pins:
+  - `aspect_rules_js` 2.4.2
+  - `aspect_rules_ts` 3.6.3
+  - `aspect_rules_jest` 0.25.2
+  - `aspect_rules_lint` 2.7.1
+- Regenerate `pnpm-lock.yaml` with pnpm 9 or newer, then move to
+  `aspect_rules_js` 3.x and compatible `aspect_rules_ts`/`rules_nodejs` pins.
 - Run Buildifier after each migration step. With the current prebuilt alias, run
   `bazel build //:buildifier` and then invoke the generated binary over the
   desired file list.
