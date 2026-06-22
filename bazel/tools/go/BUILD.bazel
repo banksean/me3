@@ -9,10 +9,11 @@ _SCRIPT = """
 # and the GOPATH directory. Failure to do this leads to strange errors like:
 #     compile: version "go1.18.1" does not match go tool version "go1.18"
 #
-# It is important to call realpath first because we want to resolve the symlink of the
-# go binary *first* before finding the grandparent directory. If we do not do this,
-# go fails to embed files which are symlinks: https://github.com/bazelbuild/rules_go/issues/3178
-export GOROOT=$$(dirname $$(dirname $$(realpath $(rootpath @go_sdk//:bin/go))))
+GO_BIN="$$(pwd)/$(rootpath @go_sdk//:bin/go)"
+
+# Ask the selected Go binary for its own root instead of resolving symlinks in
+# shell. This keeps the wrapper portable on macOS without GNU realpath.
+export GOROOT=$$("$$GO_BIN" env GOROOT)
 
 # Add the bin folder (containing go and gofmt and others) to the PATH
 export PATH=$$GOROOT/bin:$$PATH
@@ -21,7 +22,7 @@ export PATH=$$GOROOT/bin:$$PATH
 # https://bazel.build/docs/user-manual#running-executables
 cd $$BUILD_WORKING_DIRECTORY
 
-go $$@
+"$$GO_BIN" "$$@"
 """
 
 genrule(

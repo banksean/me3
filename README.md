@@ -15,9 +15,6 @@ I've included a top-level [`Makefile`](./Makefile) with some helper targets:
 - install [bazelisk](https://github.com/bazelbuild/bazelisk?tab=readme-ov-file#installation)
 - Now `bazel build //...` should work
 
-### OSX Notes
-- `brew install coreutils` (in order to install the `realpath` cli command, which is used by `bazel run //:go`).
-
 You should now be able to `bazel build //...`, `bazel run //...` etc whatever targets are defined in this repo.
 
 ## Common development workflow tasks
@@ -48,9 +45,10 @@ Suppose you want to use an external go package. We'll use `github.com/urfave/cli
 
 - run `bazel run //:go -- get github.com/urfave/cli/v2` to update `go.mod`
 - add `"github.com/urfave/cli/v2"` to your `.go` file's `import`s
-- run `make gazelle` to update `go_modules.bzl` based on the aforementioned update to `go.mod`
+- run `make gazelle` to update BUILD files based on the aforementioned update to `go.mod`
 
-Note that `bazel build` does not actually look at the contents of `go.mod` - it uses `go_dependencies.bzl`, which `make gazelle` generates from `go.mod`.
+Go module dependencies are imported through Bzlmod from `go.mod`, so rerun
+`bazel mod tidy` after changing Go dependencies.
 
 ### Manage NPM package dependencies
 Use `bazel run @pnpm` instead of `npm`:

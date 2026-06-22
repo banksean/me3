@@ -79,6 +79,11 @@ Modernize the repo so that:
   analysis for 110 seconds without visible downloader progress, matching the
   earlier SDK archive-fetch problem, so the repo remains on `go_sdk.host(...)`
   for now.
+- 2026-06-22: Simplified the `//:go` wrapper so it asks the selected Go binary
+  for `GOROOT` instead of requiring GNU `realpath`, then removed the obsolete
+  macOS `coreutils` setup note from the README. Validated with `bazel run
+  //:go -- version`, `bazel run //:go -- env GOROOT`, and `bazel build //:gofmt
+  //bazel/tools/format:format //:format`.
 
 ### 1. Finish the Bzlmod migration
 
@@ -201,8 +206,10 @@ migration.
   - `bazel/tools/format:format`
   - `bazel/tools/go:go`
   The Bzlmod Go setup may expose the SDK repository differently.
-- Consider replacing the hand-written `bazel/tools/go` wrapper if current
-  `rules_go` offers a simpler supported way to run the pinned Go toolchain.
+- Completed: Simplify the hand-written `bazel/tools/go` wrapper and remove its
+  GNU `realpath` dependency. The wrapper still exists because it preserves the
+  repo-root working directory and Go SDK `PATH` behavior expected by
+  `bazel run //:go`.
 - Revisit `go_sdk.host(...)` and move back to `go_sdk.download(...)` once Go SDK
   archive downloads are reliable in the developer/CI environment.
 - Completed: Move `//:buildifier` from the Go `buildtools` dependency to the
